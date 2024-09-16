@@ -26,13 +26,14 @@ class WebSocketClient {
 	void ProcessMessage(const std::string& message);
 	void ProcessTextMessage(const std::string& message);
 	void RespondToPing();
+	void Reconnect();
 
 	std::string host;
 	std::string port;
 	std::string code;
 
 	boost::asio::io_context ioc;
-	boost::beast::websocket::stream<boost::asio::ip::tcp::socket> ws_;
+	boost::beast::websocket::stream<boost::asio::ip::tcp::socket> ws;
 	std::thread workThread;
 	std::promise<bool> connectPromise;
 
@@ -40,4 +41,5 @@ class WebSocketClient {
 	std::mutex mtx;
 	std::condition_variable cv;
 	bool shouldStop = false;
+	bool isPromiseSet = false;
 };

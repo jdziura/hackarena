@@ -29,15 +29,19 @@ int main(int argc, char** argv)
 	// Connect to the WebSocket server asynchronously
 	auto connect_future = client.Connect();
 
+	std::thread exitThread([&client]() {
+	  ExitThread(client.shouldStop);
+	});
+
 	// Wait for the connection to be established
 	if (!connect_future.get()) {
 		std::cerr << "Failed to Connect to the WebSocket server.\n";
+		client.shouldStop = true;
 		return EXIT_FAILURE;
 	}
 
 	std::cout << "Connected successfully. Running the client...\n";
-
-	client.Run();
+	exitThread.join();
 
 	return EXIT_SUCCESS;
 }

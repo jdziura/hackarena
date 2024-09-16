@@ -11,7 +11,7 @@
 #include <utility>
 
 WebSocketClient::WebSocketClient(std::string  host, std::string  port, std::string  code)
-	: host(std::move(host)), port(std::move(port)), code(std::move(code)), ws_(ioc)
+	: host(std::move(host)), port(std::move(port)), code(std::move(code)), ws(ioc)
 {
 }
 
@@ -45,18 +45,32 @@ void WebSocketClient::DoConnect()
 	try {
 		boost::asio::ip::tcp::resolver resolver(ioc);
 		auto const results = resolver.resolve(host, port);
-		auto _ = boost::asio::connect(ws_.next_layer(), results.begin(), results.end());
+		boost::asio::connect(ws.next_layer(), results.begin(), results.end());
 
 		std::string url = ConstructUrl(host, port, code);
 		std::cout << "Connecting to WebSocket server at: " << url << std::endl;
 
 		std::string path = code.empty() ? "/" : "/?joinCode=" + code;
-		ws_.handshake(host, path);
+		ws.handshake(host, path);
 
-		connectPromise.set_value(true);
+		// Set the promise value only once
+		if (!isPromiseSet) {
+			connectPromise.set_value(true);
+			isPromiseSet = true;
+		}
+
+		// Start reading and writing threads
+		Run();
 	} catch (std::exception& e) {
 		std::cerr << "Connection failed: " << e.what() << std::endl;
-		connectPromise.set_value(false);
+
+		// Set the promise to false only on the first failure
+		if (!isPromiseSet) {
+			connectPromise.set_value(false);
+			isPromiseSet = true;
+		}
+
+		Reconnect();
 	}
 }
 
@@ -79,9 +93,9 @@ void WebSocketClient::Run()
 void WebSocketClient::DoRead()
 {
 	try {
-		for (;;) {
+		while (true) {
 			boost::beast::flat_buffer buffer;
-			ws_.read(buffer);
+			ws.read(buffer);
 			std::string message = boost::beast::buffers_to_string(buffer.data());
 
 			// Process the message
@@ -94,6 +108,7 @@ void WebSocketClient::DoRead()
 		std::cerr << "Read error: " << e.message() << std::endl;
 	} catch (std::exception& e) {
 		std::cerr << "Read exception: " << e.what() << std::endl;
+		Reconnect();
 	}
 	catch (...) {
 		std::cerr << "Exception!!!" <<  std::endl;
@@ -116,7 +131,7 @@ void WebSocketClient::DoWrite()
 				messagesToSend.pop();
 				lock.unlock();
 
-				ws_.write(boost::asio::buffer(message));
+				ws.write(boost::asio::buffer(message));
 				lock.lock();
 			}
 		}
@@ -124,6 +139,7 @@ void WebSocketClient::DoWrite()
 		std::cerr << "Write error: " << e.message() << std::endl;
 	} catch (std::exception& e) {
 		std::cerr << "Write exception: " << e.what() << std::endl;
+		Reconnect();
 	}
 }
 
@@ -147,18 +163,6 @@ void WebSocketClient::ProcessMessage(const std::string& message)
 		case PacketType::Pong:
 			// Handle Pong
 			std::cout << "Received Pong" << std::endl;
-			break;
-		case PacketType::TankMovement:
-			// Handle TankMovement
-			std::cout << "Received TankMovement" << std::endl;
-			break;
-		case PacketType::TankRotation:
-			// Handle TankRotation
-			std::cout << "Received TankRotation" << std::endl;
-			break;
-		case PacketType::TankShoot:
-			// Handle TankShoot
-			std::cout << "Received TankShoot" << std::endl;
 			break;
 		case PacketType::GameState:
 			// Handle GameState
@@ -215,3 +219,15 @@ void WebSocketClient::RespondToPing()
 	}
 }
 
+void WebSocketClient::Reconnect()
+{
+	if(!shouldStop){
+		try {
+			// Try connecting again
+			std::cerr << "Reconnecting to WebSocket server..." << std::endl;
+			DoConnect();
+		} catch (std::exception& e) {
+			std::cerr << "Reconnection attempt failed: " << e.what() << std::endl;
+		}
+	}
+}
