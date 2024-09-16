@@ -5,13 +5,13 @@
 #include <boost/beast/websocket.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <thread>
-#include <string>
 #include "packet.h"
-#include <nlohmann/json.hpp>  // Include this for JSON parsing
+#include <nlohmann/json.hpp>
 #include <stdexcept>
+#include <utility>
 
-WebSocketClient::WebSocketClient(const std::string& host, const std::string& port, const std::string& code)
-	: host(host), port(port), code(code), ws_(ioc)
+WebSocketClient::WebSocketClient(std::string  host, std::string  port, std::string  code)
+	: host(std::move(host)), port(std::move(port)), code(std::move(code)), ws_(ioc)
 {
 }
 
@@ -45,7 +45,7 @@ void WebSocketClient::DoConnect()
 	try {
 		boost::asio::ip::tcp::resolver resolver(ioc);
 		auto const results = resolver.resolve(host, port);
-		boost::asio::connect(ws_.next_layer(), results.begin(), results.end());
+		auto _ = boost::asio::connect(ws_.next_layer(), results.begin(), results.end());
 
 		std::string url = ConstructUrl(host, port, code);
 		std::cout << "Connecting to WebSocket server at: " << url << std::endl;
@@ -131,12 +131,12 @@ void WebSocketClient::ProcessMessage(const std::string& message)
 {
 	try {
 		// Parse JSON message
-		auto json_message = nlohmann::json::parse(message);
+		auto jsonMessage = nlohmann::json::parse(message);
 
 		// Deserialize Packet
 		Packet packet;
-		packet.packet_type = static_cast<PacketType>(json_message.at("type").get<uint64_t>());
-		packet.payload = json_message.at("payload");
+		packet.packet_type = static_cast<PacketType>(jsonMessage.at("type").get<uint64_t>());
+		packet.payload = jsonMessage.at("payload");
 
 		// Process based on PacketType
 		switch (packet.packet_type) {
@@ -187,9 +187,8 @@ void WebSocketClient::ProcessMessage(const std::string& message)
 
 void WebSocketClient::ProcessTextMessage(const std::string& message)
 {
-	// Process the text message
+	// TODO: Process the text message
 	std::cout << "Processing Text Message: " << message << std::endl;
-	// Example: respond to specific message types or handle them
 }
 
 void WebSocketClient::RespondToPing()

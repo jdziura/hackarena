@@ -12,7 +12,7 @@
 
 class WebSocketClient {
  public:
-	WebSocketClient(const std::string& host, const std::string& port, const std::string& code = "");
+	WebSocketClient(std::string  host, std::string  port, std::string  code = "");
 	~WebSocketClient();
 
 	std::future<bool> Connect();
