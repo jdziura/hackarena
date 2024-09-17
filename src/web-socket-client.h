@@ -17,6 +17,7 @@ class WebSocketClient {
 
 	std::future<bool> Connect();
 	void Run();
+	void Stop();
 	static std::string ConstructUrl(const std::string& host, const std::string& port, const std::string& code);
 
  private:
@@ -41,7 +42,6 @@ class WebSocketClient {
 	std::mutex mtx;
 	std::condition_variable cv;
 	bool isPromiseSet = false;
-	bool shouldStop = false;
 	bool isReconnecting = false;
 	std::chrono::steady_clock::time_point reconnectStartTime;
 };

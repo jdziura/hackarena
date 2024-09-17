@@ -21,6 +21,19 @@ WebSocketClient::~WebSocketClient()
 		workThread.join();
 }
 
+void WebSocketClient::Stop()
+{
+	try {
+		// Close the WebSocket connection
+		if (ws.is_open()) {
+			ws.close(boost::beast::websocket::close_code::normal);
+		}
+	} catch (const std::exception& e) {
+		std::cerr << "Error closing WebSocket: " << e.what() << std::endl;
+	}
+	TerminateThread(workThread.native_handle(), 0);
+}
+
 std::string WebSocketClient::ConstructUrl(const std::string& host, const std::string& port, const std::string& code)
 {
 	if (code.empty()) {
@@ -130,11 +143,7 @@ void WebSocketClient::DoWrite()
 	try {
 		while (true) {
 			std::unique_lock<std::mutex> lock(mtx);
-			cv.wait(lock, [this]() { return !messagesToSend.empty() || shouldStop; });
-
-			if (shouldStop && messagesToSend.empty()) {
-				break;
-			}
+			cv.wait(lock, [this]() { return !messagesToSend.empty(); });
 
 			while (!messagesToSend.empty()) {
 				std::string message = messagesToSend.front();
@@ -240,6 +249,7 @@ void WebSocketClient::Reconnect()
 	auto elapsedTime = std::chrono::steady_clock::now() - reconnectStartTime;
 	if (std::chrono::duration_cast<std::chrono::seconds>(elapsedTime).count() > 10) {
 		std::cerr << "\nReconnection attempts timed out after 10 seconds.\n";
+		Stop();
 		return;
 	}
 
@@ -248,7 +258,6 @@ void WebSocketClient::Reconnect()
 	isPromiseSet = false; // Reset the flag
 
 	try {
-		std::cerr << "Reconnecting to WebSocket server..." << std::endl;
 		DoConnect();
 	} catch (std::exception& e) {
 		std::cerr << "Reconnection attempt failed: " << e.what() << std::endl;
