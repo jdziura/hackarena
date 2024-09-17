@@ -190,7 +190,8 @@ void WebSocketClient::ProcessMessage(const std::string& message)
 			break;
 		case PacketType::GameState:
 			// Handle GameState
-			std::cout << "Received GameState" << std::endl;
+			std::cout << "Received GameState: " << std::endl;
+
 			break;
 		case PacketType::LobbyData:
 			// Handle LobbyData
@@ -226,9 +227,9 @@ void WebSocketClient::RespondToPing()
 		Packet pongPacket = Packet::ConstructPongPacket();
 
 		// Serialize Packet to JSON
-		nlohmann::json jsonResponse;
+		nlohmann::ordered_json jsonResponse;
 		jsonResponse["type"] = static_cast<uint64_t>(pongPacket.packet_type);
-		jsonResponse["payload"] = pongPacket.payload;
+		jsonResponse["payload"] = nlohmann::json::object();
 
 		std::string responseString = jsonResponse.dump();
 
