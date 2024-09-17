@@ -58,7 +58,7 @@ void WebSocketClient::DoConnect()
 			connectPromise.set_value(true);
 			isPromiseSet = true;
 		}
-
+		isReconnecting = false;
 		// Start reading and writing threads
 		Run();
 	} catch (std::exception& e) {
@@ -70,6 +70,11 @@ void WebSocketClient::DoConnect()
 			isPromiseSet = true;
 		}
 
+		// Start the reconnection timer
+		if (!isReconnecting) {
+			reconnectStartTime = std::chrono::steady_clock::now();
+			isReconnecting = true;
+		}
 		Reconnect();
 	}
 }
@@ -108,6 +113,11 @@ void WebSocketClient::DoRead()
 		std::cerr << "Read error: " << e.message() << std::endl;
 	} catch (std::exception& e) {
 		std::cerr << "Read exception: " << e.what() << std::endl;
+		// Start the reconnection timer
+		if (!isReconnecting) {
+			reconnectStartTime = std::chrono::steady_clock::now();
+			isReconnecting = true;
+		}
 		Reconnect();
 	}
 	catch (...) {
@@ -139,6 +149,11 @@ void WebSocketClient::DoWrite()
 		std::cerr << "Write error: " << e.message() << std::endl;
 	} catch (std::exception& e) {
 		std::cerr << "Write exception: " << e.what() << std::endl;
+		// Start the reconnection timer
+		if (!isReconnecting) {
+			reconnectStartTime = std::chrono::steady_clock::now();
+			isReconnecting = true;
+		}
 		Reconnect();
 	}
 }
@@ -221,13 +236,22 @@ void WebSocketClient::RespondToPing()
 
 void WebSocketClient::Reconnect()
 {
-	if(!shouldStop){
-		try {
-			// Try connecting again
-			std::cerr << "Reconnecting to WebSocket server..." << std::endl;
-			DoConnect();
-		} catch (std::exception& e) {
-			std::cerr << "Reconnection attempt failed: " << e.what() << std::endl;
-		}
+	// Check elapsed time
+	auto elapsedTime = std::chrono::steady_clock::now() - reconnectStartTime;
+	if (std::chrono::duration_cast<std::chrono::seconds>(elapsedTime).count() > 10) {
+		std::cerr << "\nReconnection attempts timed out after 10 seconds.\n";
+		return;
+	}
+
+	// Reset the promise for a new connection attempt
+	connectPromise = std::promise<bool>();
+	isPromiseSet = false; // Reset the flag
+
+	try {
+		std::cerr << "Reconnecting to WebSocket server..." << std::endl;
+		DoConnect();
+	} catch (std::exception& e) {
+		std::cerr << "Reconnection attempt failed: " << e.what() << std::endl;
+		Reconnect(); // Recursive call to keep trying to reconnect
 	}
 }

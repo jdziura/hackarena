@@ -1,7 +1,7 @@
 {
   "name" : "hackarena2024h2-cxx",
   "version-string" : "1.0.0",
-  "builtin-baseline" : "b8a9371ae5a920b021132f443cc5658e82ac7551",
+  "builtin-baseline" : "efb544d5a580c51f270998d6522c08debb1b5769",
   "dependencies" : [ {
     "name" : "boost-asio",
     "version>=" : "1.85.0#2"
