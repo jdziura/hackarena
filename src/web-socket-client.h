@@ -1,18 +1,11 @@
 #pragma once
 
-#include <boost/asio.hpp>
-#include <boost/beast.hpp>
-#include <string>
-#include <memory>
-#include <thread>
-#include <future>
-#include <queue>
-#include <mutex>
-#include <condition_variable>
+#include "pch.h"
+#include "thread-timer.h"
 
 class WebSocketClient {
  public:
-	WebSocketClient(std::string  host, std::string  port, std::string  code = "");
+	WebSocketClient(std::string  host, std::string  port, std::string  code = "", int timeoutNumber = 100);
 	~WebSocketClient();
 
 	std::future<bool> Connect();
@@ -36,6 +29,7 @@ class WebSocketClient {
 	boost::asio::io_context ioc;
 	boost::beast::websocket::stream<boost::asio::ip::tcp::socket> ws;
 	std::thread workThread;
+	ThreadTimer threadTimer;
 	std::promise<bool> connectPromise;
 
 	std::queue<std::string> messagesToSend;

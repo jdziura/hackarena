@@ -1,19 +1,10 @@
+#include "pch.h"
 #include "web-socket-client.h"
-#include <iostream>
-#include <boost/asio/connect.hpp>
-#include <boost/beast/core.hpp>
-#include <boost/beast/websocket.hpp>
-#include <boost/asio/ip/tcp.hpp>
-#include <thread>
 #include "packet.h"
-#include <nlohmann/json.hpp>
-#include <stdexcept>
-#include <utility>
 
-WebSocketClient::WebSocketClient(std::string  host, std::string  port, std::string  code)
-	: host(std::move(host)), port(std::move(port)), code(std::move(code)), ws(ioc)
-{
-}
+WebSocketClient::WebSocketClient(std::string  host, std::string  port, std::string  code, int timeoutNumber)
+	: host(std::move(host)), port(std::move(port)), code(std::move(code)), ws(ioc),
+	  threadTimer(timeoutNumber) {}
 
 WebSocketClient::~WebSocketClient()
 {

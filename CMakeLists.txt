@@ -19,10 +19,19 @@ include_directories(${Boost_INCLUDE_DIRS})
 add_executable(HackArena2024H2_Cxx src/main.cpp
         src/web-socket-client.cpp
         src/web-socket-client.h
-        src/packet.h)
+        src/packet.h
+        src/thread-timer.cpp
+        src/thread-timer.h
+        src/pch.h)
+
+target_precompile_headers(HackArena2024H2_Cxx PRIVATE src/pch.h)
 
 # Define preprocessor macros
-target_compile_definitions(HackArena2024H2_Cxx PRIVATE _WIN32_WINDOWS=0x0A00)
+if(WIN32)
+    target_compile_definitions(HackArena2024H2_Cxx PRIVATE _WIN32_WINDOWS=0x0A00)
+elseif(UNIX)
+    # Unix-specific settings
+endif()
 
 # Link Boost libraries
 target_link_libraries(HackArena2024H2_Cxx PRIVATE Boost::system nlohmann_json::nlohmann_json)
