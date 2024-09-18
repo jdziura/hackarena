@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "thread-timer.h"
 
 void ThreadTimer::ThreadProcessTimeout(const std::function<void()>& handler, int waitFor) {

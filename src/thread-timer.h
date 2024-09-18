@@ -1,3 +1,5 @@
+#include "pch.h"
+
 #pragma once
 
 class ThreadTimer

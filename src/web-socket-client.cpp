@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "web-socket-client.h"
 #include "packet.h"
 
@@ -180,6 +179,7 @@ void WebSocketClient::ProcessMessage(const std::string& message)
 		case PacketType::Ping:
 			// Handle Ping
 			RespondToPing();
+			std::cout << "Received Ping" << std::endl;
 			break;
 		case PacketType::Pong:
 			// Handle Pong
@@ -188,7 +188,6 @@ void WebSocketClient::ProcessMessage(const std::string& message)
 		case PacketType::GameState:
 			// Handle GameState
 			std::cout << "Received GameState" << std::endl;
-
 			break;
 		case PacketType::LobbyData:
 			// Handle LobbyData
@@ -209,12 +208,6 @@ void WebSocketClient::ProcessMessage(const std::string& message)
 	} catch (const std::exception& e) {
 		std::cerr << "Error processing message: " << e.what() << std::endl;
 	}
-}
-
-void WebSocketClient::ProcessTextMessage(const std::string& message)
-{
-	// TODO: Process the text message
-	std::cout << "Processing Text Message: " << message << std::endl;
 }
 
 void WebSocketClient::RespondToPing()
