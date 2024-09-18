@@ -4,10 +4,11 @@
 std::queue<std::string> WebSocketClient::messagesToSend;
 std::mutex WebSocketClient::mtx;
 std::condition_variable WebSocketClient::cv;
+ThreadTimer WebSocketClient::threadTimer(5000);
+Agent WebSocketClient::agent("", "");
 
 WebSocketClient::WebSocketClient(std::string  host, std::string  port, std::string  code, int timeoutNumber)
-	: host(std::move(host)), port(std::move(port)), code(std::move(code)), ws(ioc),
-	  threadTimer(timeoutNumber) {}
+	: host(std::move(host)), port(std::move(port)), code(std::move(code)), ws(ioc) {}
 
 WebSocketClient::~WebSocketClient()
 {
@@ -110,12 +111,6 @@ void WebSocketClient::DoRead()
 			ws.read(buffer);
 			std::string message = boost::beast::buffers_to_string(buffer.data());
 
-			// Process the message
-			/*std::thread processMessageThread([this, message]() {
-			  ProcessMessage(message);
-			});
-			processMessageThread.detach();*/
-
 			threadTimer.SetTimeout(ProcessMessage, message);
 		}
 	} catch (boost::beast::error_code& e) {
@@ -187,10 +182,13 @@ void WebSocketClient::ProcessMessage(const std::string& message)
 			break;
 		case PacketType::GameState:
 			// Handle GameState
+			Handlers::GameState(&agent);
 			std::cout << "Received GameState" << std::endl;
 			break;
 		case PacketType::LobbyData:
 			// Handle LobbyData
+			Handlers::LobbyData();
+			threadTimer.timeoutNumber = 100;
 			std::cout << "Received LobbyData" << std::endl;
 			break;
 		case PacketType::Ready:
@@ -199,6 +197,7 @@ void WebSocketClient::ProcessMessage(const std::string& message)
 			break;
 		case PacketType::GameEnded:
 			// Handle GameEnded
+			Handlers::GameEnded();
 			std::cout << "Received GameEnded" << std::endl;
 			break;
 		default:

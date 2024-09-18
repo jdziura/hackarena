@@ -5,10 +5,10 @@
 class ThreadTimer
 {
  private:
-	int timeoutNumber;
 	static void ThreadProcessTimeout(const std::function<void()>& handler, int waitFor);
 
  public:
+	int timeoutNumber;
 	explicit ThreadTimer(int timeoutNumber);
 
 	template<typename Function, typename... Args>

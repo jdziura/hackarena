@@ -2,6 +2,8 @@
 
 #include "pch.h"
 #include "thread-timer.h"
+#include "handlers.h"
+#include "agent/agent.h"
 
 class WebSocketClient {
  public:
@@ -18,7 +20,6 @@ class WebSocketClient {
 	void DoRead();
 	void DoWrite();
 	static void ProcessMessage(const std::string& message);
-	static void ProcessTextMessage(const std::string& message);
 	static void RespondToPing();
 	void Reconnect();
 
@@ -29,7 +30,8 @@ class WebSocketClient {
 	boost::asio::io_context ioc;
 	boost::beast::websocket::stream<boost::asio::ip::tcp::socket> ws;
 	std::thread workThread;
-	ThreadTimer threadTimer;
+	static ThreadTimer threadTimer;
+	static Agent agent;
 	std::promise<bool> connectPromise;
 
 	static std::queue<std::string> messagesToSend;

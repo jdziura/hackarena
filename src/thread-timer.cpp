@@ -1,6 +1,6 @@
 #include "thread-timer.h"
 
-void ThreadTimer::ThreadProcessTimeout(const std::function<void()>& handler, int waitFor) {
+void ThreadTimer::ThreadProcessTimeout(const std::function<void()>& handler, int waitFor) { // TODO: take handle and kill instead of: take func -> run -> take handle -> kill
 	// Use a std::promise to signal the thread completion
 	std::promise<void> exitSignal;
 	std::future<void> exitSignalFuture = exitSignal.get_future();

@@ -7,7 +7,7 @@ int main(int argc, char** argv)
 	std::string host = "localhost";
 	std::string port = "5000";
 	std::string code;
-	std::string timeoutNumber = "100";
+	std::string timeoutNumber = "5000";
 
 	// Check command line arguments and update default values if provided
 	if (argc > 1) host = argv[1];

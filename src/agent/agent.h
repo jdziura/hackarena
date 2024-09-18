@@ -4,8 +4,9 @@
 
 class Agent {
  public:
-	void NextMove();
-	void OnGameEnded();
+	Agent(std::string myId, std::string myNickname);
+	static void NextMove();
+	static void OnGameEnded();
  private:
 	std::string myId;
 	std::string myNickname;

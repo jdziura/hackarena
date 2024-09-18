@@ -1,9 +1,13 @@
 #include "pch.h"
+#include "agent/agent.h"
 
 #pragma once
 
 namespace Handlers {
-	void LobbyData(){}
-	void GameState(){}
-	void GameEnded(){}
+	static void LobbyData() {};
+	static void GameState(Agent *agent) {
+		*agent = Agent("test Id", "test Nickname");
+		agent->NextMove();
+	};
+	static void GameEnded() {};
 }
