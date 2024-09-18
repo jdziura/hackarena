@@ -22,13 +22,4 @@ void ThreadTimer::ThreadProcessTimeout(const std::function<void()>& handler, int
 	}
 }
 
-template<typename Function, typename... Args>
-void ThreadTimer::SetTimeout(Function&& func, Args&&... args) {
-	auto boundFunction = std::bind(std::forward<Function>(func), std::forward<Args>(args)...);
-
-	std::thread processMessageThread([this, boundFunction]() {
-	  ThreadProcessTimeout(boundFunction, timeoutNumber);
-	});
-	processMessageThread.detach();
-}
 ThreadTimer::ThreadTimer(int timeoutNumber) : timeoutNumber(timeoutNumber) {}

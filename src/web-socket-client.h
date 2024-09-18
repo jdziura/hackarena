@@ -17,9 +17,9 @@ class WebSocketClient {
 	void DoConnect();
 	void DoRead();
 	void DoWrite();
-	void ProcessMessage(const std::string& message);
-	void ProcessTextMessage(const std::string& message);
-	void RespondToPing();
+	static void ProcessMessage(const std::string& message);
+	static void ProcessTextMessage(const std::string& message);
+	static void RespondToPing();
 	void Reconnect();
 
 	std::string host;
@@ -32,9 +32,9 @@ class WebSocketClient {
 	ThreadTimer threadTimer;
 	std::promise<bool> connectPromise;
 
-	std::queue<std::string> messagesToSend;
-	std::mutex mtx;
-	std::condition_variable cv;
+	static std::queue<std::string> messagesToSend;
+	static std::mutex mtx;
+	static std::condition_variable cv;
 	bool isPromiseSet = false;
 	bool isReconnecting = false;
 	std::chrono::steady_clock::time_point reconnectStartTime;

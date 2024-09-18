@@ -2,6 +2,10 @@
 #include "web-socket-client.h"
 #include "packet.h"
 
+std::queue<std::string> WebSocketClient::messagesToSend;
+std::mutex WebSocketClient::mtx;
+std::condition_variable WebSocketClient::cv;
+
 WebSocketClient::WebSocketClient(std::string  host, std::string  port, std::string  code, int timeoutNumber)
 	: host(std::move(host)), port(std::move(port)), code(std::move(code)), ws(ioc),
 	  threadTimer(timeoutNumber) {}
@@ -108,10 +112,12 @@ void WebSocketClient::DoRead()
 			std::string message = boost::beast::buffers_to_string(buffer.data());
 
 			// Process the message
-			std::thread processMessageThread([this, message]() {
+			/*std::thread processMessageThread([this, message]() {
 			  ProcessMessage(message);
 			});
-			processMessageThread.detach();
+			processMessageThread.detach();*/
+
+			threadTimer.SetTimeout(ProcessMessage, message);
 		}
 	} catch (boost::beast::error_code& e) {
 		std::cerr << "Read error: " << e.message() << std::endl;
@@ -181,7 +187,7 @@ void WebSocketClient::ProcessMessage(const std::string& message)
 			break;
 		case PacketType::GameState:
 			// Handle GameState
-			std::cout << "Received GameState: " << std::endl;
+			std::cout << "Received GameState" << std::endl;
 
 			break;
 		case PacketType::LobbyData:
