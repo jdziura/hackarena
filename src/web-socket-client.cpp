@@ -212,12 +212,12 @@ void WebSocketClient::ProcessMessage(const std::string& message)
 			break;
 		case PacketType::GameState:
 			// Handle GameState
-			handler.GameState();
+			handler.HandleGameState(packet.payload);
 			std::cout << "Received GameState" << std::endl;
 			break;
 		case PacketType::LobbyData:
 			// Handle LobbyData
-			handler.LobbyData();
+			handler.HandleLobbyData(packet.payload);
 			timeoutNumber = packet.payload.at("broadcastInterval").get<int>();
 			std::cout << "Broadcast Interval: " << timeoutNumber << std::endl;
 			std::cout << "Received LobbyData" << std::endl;
@@ -228,7 +228,7 @@ void WebSocketClient::ProcessMessage(const std::string& message)
 			break;
 		case PacketType::GameEnded:
 			// Handle GameEnded
-			handler.GameEnded();
+			handler.HandleGameEnded(packet.payload);
 			std::cout << "Received GameEnded" << std::endl;
 			break;
 		default:
