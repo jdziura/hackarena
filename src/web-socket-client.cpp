@@ -1,8 +1,8 @@
 #include "web-socket-client.h"
 #include "packet.h"
 
-WebSocketClient::WebSocketClient(std::string  host, std::string  port, std::string  code, int timeoutNumber)
-	: host(std::move(host)), port(std::move(port)), code(std::move(code)), ws(ioc), timeoutNumber(timeoutNumber),
+WebSocketClient::WebSocketClient(std::string  host, std::string  port, std::string  code)
+	: host(std::move(host)), port(std::move(port)), code(std::move(code)), ws(ioc),
 	  handler(&agent, &messagesToSend, &mtx, &cv) {}
 
 WebSocketClient::~WebSocketClient()
@@ -103,12 +103,6 @@ void WebSocketClient::Run()
 	writeThread.join();
 }
 
-void WaitForUnoSeconds() {
-	// Sleep for 2 seconds
-	std::this_thread::sleep_for(std::chrono::seconds(1));
-	std::cout << "Waited for 1 second..." << std::endl;
-}
-
 void WebSocketClient::DoRead()
 {
 	try {
@@ -150,7 +144,6 @@ void WebSocketClient::SendToProcessing()
 				lock.unlock();
 
 				std::thread processMessageThread([this, message]() {
-				  //WaitForUnoSeconds();
 				  ProcessMessage(message);
 				});
 
@@ -225,7 +218,8 @@ void WebSocketClient::ProcessMessage(const std::string& message)
 		case PacketType::LobbyData:
 			// Handle LobbyData
 			handler.LobbyData();
-			timeoutNumber = 100;
+			timeoutNumber = packet.payload.at("broadcastInterval").get<int>();
+			std::cout << "Broadcast Interval: " << timeoutNumber << std::endl;
 			std::cout << "Received LobbyData" << std::endl;
 			break;
 		case PacketType::Ready:
