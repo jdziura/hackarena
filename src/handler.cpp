@@ -5,7 +5,7 @@ void Handler::HandleGameState(nlohmann::json payload) {
 
 	//TODO: Process GameState packet here
 
-	agentPtr->NextMove(gameState);
+	ResponseVariant response = agentPtr->NextMove(gameState);
 }
 
 void Handler::HandleGameEnded(nlohmann::json payload) {}

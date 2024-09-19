@@ -90,3 +90,30 @@ struct GameState {
 	std::vector<Player> players;
 	Map map;
 };
+
+enum class RotationDirection {
+	left = 0,
+	right = 1
+};
+
+enum class MoveDirection {
+	forward = 0,
+	backward = 1
+};
+
+// Rotation struct
+struct Rotate {
+	RotationDirection tankRotation;
+	RotationDirection turretRotation;
+};
+
+// Move struct
+struct Move {
+	MoveDirection direction;
+};
+
+struct Shoot {};
+
+struct Wait {};
+
+using ResponseVariant = std::variant<Rotate, Move, Shoot, Wait>;

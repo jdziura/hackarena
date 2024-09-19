@@ -6,6 +6,6 @@ class Agent {
  public:
 	Agent();
 	void Init(LobbyData lobbyData);
-	void NextMove(GameState gameState);
+	ResponseVariant NextMove(GameState gameState);
 	void OnGameEnded();
 };

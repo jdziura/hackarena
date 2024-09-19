@@ -2,6 +2,6 @@
 #include <utility>
 
 Agent::Agent() = default;
-void Agent::NextMove(GameState gameState) {}
-void Agent::OnGameEnded() {}
 void Agent::Init(LobbyData lobbyData) {}
+ResponseVariant Agent::NextMove(GameState gameState) {return Wait{};}
+void Agent::OnGameEnded() {}

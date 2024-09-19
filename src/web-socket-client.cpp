@@ -254,10 +254,8 @@ void WebSocketClient::RespondToPing()
 		std::string responseString = jsonResponse.dump();
 
 		// Send the response over the WebSocket
-		{
-			std::lock_guard<std::mutex> lock(mtx);
-			messagesToSend.push(responseString);
-		}
+		std::lock_guard<std::mutex> lock(mtx);
+		messagesToSend.push(responseString);
 		cv.notify_one();
 	} catch (const std::exception& e) {
 		std::cerr << "Error responding to Ping: " << e.what() << std::endl;
