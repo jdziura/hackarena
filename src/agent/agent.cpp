@@ -4,3 +4,4 @@
 Agent::Agent() = default;
 void Agent::NextMove(GameState gameState) {}
 void Agent::OnGameEnded() {}
+void Agent::Init(LobbyData lobbyData) {}

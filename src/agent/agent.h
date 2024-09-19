@@ -5,7 +5,7 @@
 class Agent {
  public:
 	Agent();
+	void Init(LobbyData lobbyData);
 	void NextMove(GameState gameState);
 	void OnGameEnded();
-	LobbyData lobbyData;
 };
