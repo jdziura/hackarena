@@ -20,13 +20,12 @@ add_executable(HackArena2024H2_Cxx src/main.cpp
         src/web-socket-client.cpp
         src/web-socket-client.h
         src/packet.h
-        src/thread-timer.cpp
-        src/thread-timer.h
         src/pch.h
-        src/handlers.h
         src/agent/agent.cpp
         src/agent/agent.h
-        src/processed-packets.h)
+        src/processed-packets.h
+        src/handler.cpp
+        src/handler.h)
 
 target_precompile_headers(HackArena2024H2_Cxx PRIVATE src/pch.h)
 

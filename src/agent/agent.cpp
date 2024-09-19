@@ -1,8 +1,7 @@
 #include "agent.h"
-Agent::Agent(std::string myId, std::string myNickname) {
-	this->myId = myId;
-	this->myNickname = myNickname;
-}
+#include <utility>
+
+Agent::Agent(std::string myId, std::string myNickname) : myId(std::move(myId)), myNickname(std::move(myNickname)) {}
 void Agent::NextMove() {
 
 }

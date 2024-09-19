@@ -1,14 +1,9 @@
 #include "web-socket-client.h"
 #include "packet.h"
 
-std::queue<std::string> WebSocketClient::messagesToSend;
-std::mutex WebSocketClient::mtx;
-std::condition_variable WebSocketClient::cv;
-ThreadTimer WebSocketClient::threadTimer(5000);
-Agent WebSocketClient::agent("", "");
-
 WebSocketClient::WebSocketClient(std::string  host, std::string  port, std::string  code, int timeoutNumber)
-	: host(std::move(host)), port(std::move(port)), code(std::move(code)), ws(ioc) {}
+	: host(std::move(host)), port(std::move(port)), code(std::move(code)), ws(ioc), timeoutNumber(timeoutNumber),
+	  handler(&agent, &messagesToSend, &mtx, &cv) {}
 
 WebSocketClient::~WebSocketClient()
 {
@@ -91,6 +86,10 @@ void WebSocketClient::Run()
 {
 	ioc.run();
 
+	std::thread processingThread([this]() {
+	  SendToProcessing();
+	});
+
 	std::thread readThread([this]() {
 	  DoRead();
 	});
@@ -99,8 +98,15 @@ void WebSocketClient::Run()
 	  DoWrite();
 	});
 
+	processingThread.join();
 	readThread.join();
 	writeThread.join();
+}
+
+void WaitForUnoSeconds() {
+	// Sleep for 2 seconds
+	std::this_thread::sleep_for(std::chrono::seconds(1));
+	std::cout << "Waited for 1 second..." << std::endl;
 }
 
 void WebSocketClient::DoRead()
@@ -111,7 +117,9 @@ void WebSocketClient::DoRead()
 			ws.read(buffer);
 			std::string message = boost::beast::buffers_to_string(buffer.data());
 
-			threadTimer.SetTimeout(ProcessMessage, message);
+			std::lock_guard<std::mutex> lock(mtxR);
+			messagesReceived.push(message);
+			cvR.notify_one();
 		}
 	} catch (boost::beast::error_code& e) {
 		std::cerr << "Read error: " << e.message() << std::endl;
@@ -129,6 +137,36 @@ void WebSocketClient::DoRead()
 	}
 }
 
+void WebSocketClient::SendToProcessing()
+{
+	try {
+		while (true) {
+			std::unique_lock<std::mutex> lock(mtxR);
+			cvR.wait(lock, [this]() { return !messagesReceived.empty(); });
+
+			while (!messagesReceived.empty()) {
+				std::string message = messagesReceived.front();
+				messagesReceived.pop();
+				lock.unlock();
+
+				std::thread processMessageThread([this, message]() {
+				  //WaitForUnoSeconds();
+				  ProcessMessage(message);
+				});
+
+				if (WaitForSingleObject(processMessageThread.native_handle(), timeoutNumber) != 0x00000000L) {
+					TerminateThread(processMessageThread.native_handle(), 1);
+				}
+				processMessageThread.join();
+
+				lock.lock();
+			}
+		}
+	} catch (std::exception& e) {
+		std::cerr << "Send to processing exception: " << e.what() << std::endl;
+	}
+}
+
 void WebSocketClient::DoWrite()
 {
 	try {
@@ -140,7 +178,6 @@ void WebSocketClient::DoWrite()
 				std::string message = messagesToSend.front();
 				messagesToSend.pop();
 				lock.unlock();
-
 				ws.write(boost::asio::buffer(message));
 				lock.lock();
 			}
@@ -182,13 +219,13 @@ void WebSocketClient::ProcessMessage(const std::string& message)
 			break;
 		case PacketType::GameState:
 			// Handle GameState
-			Handlers::GameState(&agent);
+			handler.GameState();
 			std::cout << "Received GameState" << std::endl;
 			break;
 		case PacketType::LobbyData:
 			// Handle LobbyData
-			Handlers::LobbyData();
-			threadTimer.timeoutNumber = 100;
+			handler.LobbyData();
+			timeoutNumber = 100;
 			std::cout << "Received LobbyData" << std::endl;
 			break;
 		case PacketType::Ready:
@@ -197,7 +234,7 @@ void WebSocketClient::ProcessMessage(const std::string& message)
 			break;
 		case PacketType::GameEnded:
 			// Handle GameEnded
-			Handlers::GameEnded();
+			handler.GameEnded();
 			std::cout << "Received GameEnded" << std::endl;
 			break;
 		default:
