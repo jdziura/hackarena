@@ -212,8 +212,13 @@ void Handler::HandleGameState(nlohmann::json payload) {
 		}
 	}
 
+	// If agent move takes less than 5 seconds send response
+	auto start = std::chrono::high_resolution_clock::now();
 	ResponseVariant response = agentPtr->NextMove(gameState);
-	SendResponse(response);
+	auto end = std::chrono::high_resolution_clock::now();
+	std::chrono::duration<double, std::milli> duration = end - start;
+
+	if(duration.count() < 5000) SendResponse(response);
 }
 
 void Handler::HandleGameEnded(nlohmann::json payload) {}
