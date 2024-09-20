@@ -6,13 +6,13 @@
 
 class WebSocketClient {
  public:
-	WebSocketClient(std::string  host, std::string  port, std::string  code = "", int timeoutNumber = 5000);
+	WebSocketClient(std::string  host, std::string  port, std::string nickname, std::string  code, int timeoutNumber);
 	~WebSocketClient();
 
 	std::future<bool> Connect();
 	void Run();
 	void Stop();
-	std::string ConstructUrl(const std::string& host, const std::string& port, const std::string& code);
+	std::string ConstructUrl(const std::string& code, const std::string& nickname, bool quickJoin);
 
  private:
 	void DoConnect();
@@ -25,8 +25,9 @@ class WebSocketClient {
 
 	std::string host;
 	std::string port;
+	std::string nickname;
 	std::string code;
-	int timeoutNumber = 5000;
+	int timeoutNumber;
 
 	boost::asio::io_context ioc;
 	boost::beast::websocket::stream<boost::asio::ip::tcp::socket> ws;

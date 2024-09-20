@@ -13,8 +13,10 @@ struct LobbyData {
 	std::string myId;
 	std::vector<LobbyPlayers> players;
 	int gridDimension;
+	int numberOfPlayers;
 	int seed;
 	int broadcastInterval; // how many milliseconds in tick
+	bool eagerBroadcast;
 };
 
 // Turret struct for tanks

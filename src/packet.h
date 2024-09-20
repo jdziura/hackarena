@@ -3,13 +3,14 @@
 
 enum class PacketType {
 	Unknown = 0,
-	Ping = 1,
-	Pong = 2,
-	TankMovement = 11,
-	TankRotation = 12,
-	TankShoot = 13,
-	GameState = 21,
-	LobbyData = 31,
+	Ping = 17,
+	Pong = 18,
+	GameStart = 49,
+	TankMovement = 65,
+	TankRotation = 66,
+	TankShoot = 67,
+	GameState = 50,
+	LobbyData = 33,
 	Ready = 102,
 	GameEnded = 103
 };

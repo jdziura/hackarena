@@ -1,9 +1,11 @@
 #include "web-socket-client.h"
+
+#include <utility>
 #include "packet.h"
 
-WebSocketClient::WebSocketClient(std::string  host, std::string  port, std::string  code, int timeoutNumber)
+WebSocketClient::WebSocketClient(std::string  host, std::string  port, std::string nickname, std::string  code, int timeoutNumber)
 	: host(std::move(host)), port(std::move(port)), code(std::move(code)), ws(ioc), timeoutNumber(timeoutNumber),
-	  handler(&agent, &messagesToSend, &mtx, &cv) {}
+	  nickname(std::move(nickname)), handler(&agent, &messagesToSend, &mtx, &cv) {}
 
 WebSocketClient::~WebSocketClient()
 {
@@ -24,13 +26,21 @@ void WebSocketClient::Stop()
 	TerminateThread(workThread.native_handle(), 0);
 }
 
-std::string WebSocketClient::ConstructUrl(const std::string& host, const std::string& port, const std::string& code)
+std::string WebSocketClient::ConstructUrl(const std::string& code, const std::string& nickname, bool quickJoin)
 {
-	if (code.empty()) {
-		return "ws://" + host + ":" + port;
+	std::string url = "/?nickname=" + nickname;
+
+	if (!code.empty()) {
+		url += "&joinCode=" + code;
 	}
-	return "ws://" + host + ":" + port + "/?joinCode=" + code;
+
+	if (quickJoin) {
+		url += "&quickJoin=true";
+	}
+
+	return url;
 }
+
 
 std::future<bool> WebSocketClient::Connect()
 {
@@ -50,10 +60,7 @@ void WebSocketClient::DoConnect()
 		auto const results = resolver.resolve(host, port);
 		boost::asio::connect(ws.next_layer(), results.begin(), results.end());
 
-		std::string url = ConstructUrl(host, port, code);
-		std::cout << "Connecting to WebSocket server at: " << url << std::endl;
-
-		std::string path = code.empty() ? "/" : "/?joinCode=" + code;
+		std::string path = ConstructUrl(code, nickname, true);
 		ws.handshake(host, path);
 
 		// Set the promise value only once
@@ -209,6 +216,10 @@ void WebSocketClient::ProcessMessage(const std::string& message)
 		case PacketType::Pong:
 			// Handle Pong
 			std::cout << "Received Pong" << std::endl;
+			break;
+		case PacketType::GameStart:
+			// Handle GameStart
+			std::cout << "Received GameStart" << std::endl;
 			break;
 		case PacketType::GameState:
 			// Handle GameState

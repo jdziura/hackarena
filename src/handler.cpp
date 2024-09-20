@@ -13,6 +13,7 @@ void Handler::HandleGameEnded(nlohmann::json payload) {}
 void Handler::HandleLobbyData(nlohmann::json payload) {
 	LobbyData lobbyData;
 
+	// Extract the playerId
 	lobbyData.myId = payload.at("playerId").get<std::string>();
 
 	// Extract players array and populate the players vector
@@ -25,10 +26,16 @@ void Handler::HandleLobbyData(nlohmann::json payload) {
 		lobbyData.players.push_back(lobbyPlayer);
 	}
 
-	lobbyData.gridDimension = payload.at("gridDimension").get<int>();
-	lobbyData.seed = payload.at("seed").get<int>();
-	lobbyData.broadcastInterval = payload.at("broadcastInterval").get<int>();
+	// Extract server settings from the nested object
+	const auto& serverSettings = payload.at("serverSettings");
 
+	lobbyData.gridDimension = serverSettings.at("gridDimension").get<int>();
+	lobbyData.numberOfPlayers = serverSettings.at("numberOfPlayers").get<int>();
+	lobbyData.seed = serverSettings.at("seed").get<int>();
+	lobbyData.broadcastInterval = serverSettings.at("broadcastInterval").get<int>();
+	lobbyData.eagerBroadcast = serverSettings.at("eagerBroadcast").get<bool>();
+
+	// Initialize the agent with the parsed lobby data
 	agentPtr->Init(lobbyData);
 }
 

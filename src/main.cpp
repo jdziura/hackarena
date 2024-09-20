@@ -6,14 +6,16 @@ int main(int argc, char** argv)
 	// Default values
 	std::string host = "localhost";
 	std::string port = "5000";
-	std::string code;
+	std::string nickname = "empty";
+	std::string code = "";
 	std::string timeoutNumber = "5000";
 
 	// Check command line arguments and update default values if provided
 	if (argc > 1) host = argv[1];
 	if (argc > 2) port = argv[2];
-	if (argc > 3) code = argv[3];
-	if (argc > 3) timeoutNumber = argv[4];
+	if (argc > 3) nickname = argv[3];
+	if (argc > 4) code = argv[4];
+	if (argc > 5) timeoutNumber = argv[5];
 
 	// Print the values
 	std::cout << "Host: " << host << "\n";
@@ -25,7 +27,7 @@ int main(int argc, char** argv)
 	std::cout << "Starting client...\n";
 
 	// Create the WebSocket client
-	WebSocketClient client(host, port, code, std::stoi(timeoutNumber));
+	WebSocketClient client(host, port, nickname, code, std::stoi(timeoutNumber));
 
 	// Connect to the WebSocket server asynchronously
 	auto connect_future = client.Connect();
