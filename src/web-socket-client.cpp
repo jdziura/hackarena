@@ -1,8 +1,8 @@
 #include "web-socket-client.h"
 #include "packet.h"
 
-WebSocketClient::WebSocketClient(std::string  host, std::string  port, std::string  code)
-	: host(std::move(host)), port(std::move(port)), code(std::move(code)), ws(ioc),
+WebSocketClient::WebSocketClient(std::string  host, std::string  port, std::string  code, int timeoutNumber)
+	: host(std::move(host)), port(std::move(port)), code(std::move(code)), ws(ioc), timeoutNumber(timeoutNumber),
 	  handler(&agent, &messagesToSend, &mtx, &cv) {}
 
 WebSocketClient::~WebSocketClient()
@@ -218,8 +218,6 @@ void WebSocketClient::ProcessMessage(const std::string& message)
 		case PacketType::LobbyData:
 			// Handle LobbyData
 			handler.HandleLobbyData(packet.payload);
-			timeoutNumber = packet.payload.at("broadcastInterval").get<int>();
-			std::cout << "Broadcast Interval: " << timeoutNumber << std::endl;
 			std::cout << "Received LobbyData" << std::endl;
 			break;
 		case PacketType::Ready:

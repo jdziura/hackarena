@@ -6,7 +6,7 @@
 
 class WebSocketClient {
  public:
-	WebSocketClient(std::string  host, std::string  port, std::string  code = "");
+	WebSocketClient(std::string  host, std::string  port, std::string  code = "", int timeoutNumber = 5000);
 	~WebSocketClient();
 
 	std::future<bool> Connect();
