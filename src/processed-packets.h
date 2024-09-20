@@ -14,14 +14,14 @@ struct LobbyData {
 	std::vector<LobbyPlayers> players;
 	int gridDimension;
 	int seed;
-	int broadcastInterval;
+	int broadcastInterval; // how many milliseconds in tick
 };
 
 // Turret struct for tanks
 struct Turret {
 	int direction;
 	std::optional<int> bulletCount; // Optional because it's not always present
-	std::optional<double> bulletRegenProgress; // Optional because it might be null
+	std::optional<int> ticksToRegenBullet; // Optional because it might be null
 };
 
 // TankPayload struct
@@ -65,7 +65,7 @@ struct Player {
 	uint32_t color;
 	int ping;
 	std::optional<int> score;  // Optional because it's not always present
-	std::optional<double> regenProgress; // Optional because it might be null
+	std::optional<int> ticksToRegen; // Optional because it might be null
 };
 
 struct Wall {
@@ -86,7 +86,7 @@ struct Map {
 // GameState struct
 struct GameState {
 	std::string playerId;
-	double time;
+	int time; // tick number
 	std::vector<Player> players;
 	Map map;
 };
