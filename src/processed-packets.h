@@ -77,12 +77,18 @@ struct Wall {
 // Define a variant to hold any type of tile object
 using TileVariant = std::variant<Wall, Tank, Bullet>;
 
-// Map struct
+/// Map struct:
+/// Tiles are stored in a 2D array
+/// where each tile is a list of items in this tile
+/// Currently there can be at most one item in a tile
+/// Outer array represents columns of the map
+/// Inner arrays represent rows of the map
+/// Item with index [0][0] represents top-left corner of the map
 struct Map {
 	// A 3D vector to hold variants of tile objects
 	std::vector<std::vector<std::vector<TileVariant>>> tiles;
 	std::vector<Zone> zones;
-	std::vector<std::vector<char>> visibility; // 2D array of chars ('0' or '1')
+	std::vector<std::vector<char>> visibility; // 2D array of chars ('0' or '1') same as tiles
 };
 
 // GameState struct

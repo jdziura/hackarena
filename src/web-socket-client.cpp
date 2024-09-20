@@ -150,6 +150,8 @@ void WebSocketClient::SendToProcessing()
 				messagesReceived.pop();
 				lock.unlock();
 
+				auto start = std::chrono::high_resolution_clock::now();
+
 				std::thread processMessageThread([this, message]() {
 				  ProcessMessage(message);
 				});
@@ -158,6 +160,12 @@ void WebSocketClient::SendToProcessing()
 					TerminateThread(processMessageThread.native_handle(), 1);
 				}
 				processMessageThread.join();
+
+				auto end = std::chrono::high_resolution_clock::now();
+				std::chrono::duration<double, std::milli> duration = end - start; // Duration in milliseconds
+
+				// Log the duration
+				std::cout << "NextMove took " << duration.count() << " ms." << std::endl;
 
 				lock.lock();
 			}

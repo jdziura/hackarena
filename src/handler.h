@@ -12,6 +12,10 @@ class Handler {
 	void HandleGameEnded(nlohmann::json payload);
 
  private:
+	TileVariant ParseTileVariant(const nlohmann::json& tileJson);
+	std::string ResponseToString(const ResponseVariant& response);
+	void SendResponse(const ResponseVariant& response);
+
 	Agent *agentPtr;
 	std::queue<std::string> *messagesToSendPtr;
 	std::mutex *mtxPtr;
