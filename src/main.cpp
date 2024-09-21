@@ -1,8 +1,7 @@
 #include "pch.h"
 #include "web-socket-client.h"
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
 	// Default values
 	std::string host = "localhost";
 	std::string port = "5000";
@@ -10,16 +9,28 @@ int main(int argc, char** argv)
 	std::string code = "";
 	std::string timeoutNumber = "5000";
 
-	// Check command line arguments and update default values if provided
-	if (argc > 1) host = argv[1];
-	if (argc > 2) port = argv[2];
-	if (argc > 3) nickname = argv[3];
-	if (argc > 4) code = argv[4];
-	if (argc > 5) timeoutNumber = argv[5];
+	// Parse command line arguments into a map
+	std::unordered_map<std::string, std::string> args;
+	for (int i = 1; i < argc; ++i) {
+		std::string arg = argv[i];
+		if (arg.starts_with("--")) {
+			if (i + 1 < argc) {
+				args[arg.substr(2)] = argv[++i]; // Store key-value pairs
+			}
+		}
+	}
+
+	// Update default values based on provided arguments
+	if (args.count("host")) host = args["host"];
+	if (args.count("port")) port = args["port"];
+	if (args.count("nickname")) nickname = args["nickname"];
+	if (args.count("code")) code = args["code"];
+	if (args.count("timeout")) timeoutNumber = args["timeout"];
 
 	// Print the values
 	std::cout << "Host: " << host << "\n";
 	std::cout << "Port: " << port << "\n";
+	std::cout << "Nickname: " << nickname << "\n";
 	std::cout << "Code: " << code << "\n";
 	std::cout << "Timeout number: " << timeoutNumber << "\n";
 
