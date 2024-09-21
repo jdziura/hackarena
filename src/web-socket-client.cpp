@@ -23,7 +23,17 @@ void WebSocketClient::Stop()
 	} catch (const std::exception& e) {
 		std::cerr << "Error closing WebSocket: " << e.what() << std::endl;
 	}
-	TerminateThread(workThread.native_handle(), 0);
+	#ifdef _WIN64
+		// Windows 64-bit specific code
+		TerminateThread(workThread.native_handle(), 0);
+	#elif defined(__linux__)
+		// Linux-specific code
+		pthread_cancel(workThread.native_handle());
+	#elif defined(__APPLE__)
+		// macOS-specific code
+	#else
+		#error "Unsupported platform"
+	#endif
 }
 
 std::string WebSocketClient::ConstructUrl(const std::string& code, const std::string& nickname, bool quickJoin)
@@ -156,9 +166,26 @@ void WebSocketClient::SendToProcessing()
 				  ProcessMessage(message);
 				});
 
-				if (WaitForSingleObject(processMessageThread.native_handle(), timeoutNumber) != 0x00000000L) {
-					TerminateThread(processMessageThread.native_handle(), 1);
-				}
+				#ifdef _WIN64
+				// Windows 64-bit specific code
+					if (WaitForSingleObject(processMessageThread.native_handle(), timeoutNumber) != 0x00000000L) {
+						TerminateThread(processMessageThread.native_handle(), 1);
+					}
+				#elif defined(__linux__)
+				// Linux-specific code
+					struct timespec ts;
+					clock_gettime(CLOCK_REALTIME, &ts);
+					ts.tv_sec += timeoutNumber / 1000;
+
+					if (pthread_timedjoin_np(processMessageThread.native_handle(), nullptr, &ts) != 0) {
+						pthread_cancel(processMessageThread.native_handle());
+					}
+				#elif defined(__APPLE__)
+					// macOS-specific code
+				#else
+					#error "Unsupported platform"
+				#endif
+
 				processMessageThread.join();
 
 				auto end = std::chrono::high_resolution_clock::now();
