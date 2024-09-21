@@ -16,7 +16,7 @@ enum class PacketType {
 };
 
 struct Packet {
-	PacketType packet_type;
+	PacketType packetType;
 	nlohmann::json payload;
 
 	static Packet ConstructPongPacket() {

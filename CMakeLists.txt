@@ -1,8 +1,5 @@
 cmake_minimum_required(VERSION 3.29)
 
-# Set Vcpkg toolchain file
-include(C:/vcpkg/scripts/buildsystems/vcpkg.cmake)
-
 # Project Name
 project(HackArena2024H2_Cxx)
 

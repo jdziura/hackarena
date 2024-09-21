@@ -4,8 +4,8 @@
 #include "packet.h"
 
 WebSocketClient::WebSocketClient(std::string  host, std::string  port, std::string nickname, std::string  code, int timeoutNumber)
-	: host(std::move(host)), port(std::move(port)), code(std::move(code)), ws(ioc), timeoutNumber(timeoutNumber),
-	  nickname(std::move(nickname)), handler(&agent, &messagesToSend, &mtx, &cv) {}
+	: host(std::move(host)), port(std::move(port)), nickname(std::move(nickname)), code(std::move(code)), timeoutNumber(timeoutNumber),
+	  ws(ioc), handler(&agent, &messagesToSend, &mtx, &cv) {}
 
 WebSocketClient::~WebSocketClient()
 {
@@ -173,7 +173,7 @@ void WebSocketClient::SendToProcessing()
 					}
 				#elif defined(__linux__)
 				// Linux-specific code
-					struct timespec ts;
+					struct timespec ts{};
 					clock_gettime(CLOCK_REALTIME, &ts);
 					ts.tv_sec += timeoutNumber / 1000;
 
@@ -238,11 +238,11 @@ void WebSocketClient::ProcessMessage(const std::string& message)
 
 		// Deserialize Packet
 		Packet packet;
-		packet.packet_type = static_cast<PacketType>(jsonMessage.at("type").get<uint64_t>());
+		packet.packetType = static_cast<PacketType>(jsonMessage.at("type").get<uint64_t>());
 		packet.payload = jsonMessage.at("payload");
 
 		// Process based on PacketType
-		switch (packet.packet_type) {
+		switch (packet.packetType) {
 		case PacketType::Ping:
 			// Handle Ping
 			RespondToPing();
@@ -292,7 +292,7 @@ void WebSocketClient::RespondToPing()
 
 		// Serialize Packet to JSON
 		nlohmann::ordered_json jsonResponse;
-		jsonResponse["type"] = static_cast<uint64_t>(pongPacket.packet_type);
+		jsonResponse["type"] = static_cast<uint64_t>(pongPacket.packetType);
 		jsonResponse["payload"] = nlohmann::json::object();
 
 		std::string responseString = jsonResponse.dump();
