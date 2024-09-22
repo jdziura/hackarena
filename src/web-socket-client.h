@@ -6,7 +6,7 @@
 
 class WebSocketClient {
  public:
-	WebSocketClient(std::string  host, std::string  port, std::string nickname, std::string  code, int timeoutNumber);
+	WebSocketClient(std::string  host, std::string  port, std::string nickname, std::string  code);
 	~WebSocketClient();
 
 	std::future<bool> Connect();
@@ -27,7 +27,6 @@ class WebSocketClient {
 	std::string port;
 	std::string nickname;
 	std::string code;
-	int timeoutNumber;
 
 	boost::asio::io_context ioc;
 	boost::beast::websocket::stream<boost::asio::ip::tcp::socket> ws;

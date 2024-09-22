@@ -3,8 +3,8 @@
 #include <utility>
 #include "packet.h"
 
-WebSocketClient::WebSocketClient(std::string  host, std::string  port, std::string nickname, std::string  code, int timeoutNumber)
-	: host(std::move(host)), port(std::move(port)), nickname(std::move(nickname)), code(std::move(code)), timeoutNumber(timeoutNumber),
+WebSocketClient::WebSocketClient(std::string  host, std::string  port, std::string nickname, std::string  code)
+	: host(std::move(host)), port(std::move(port)), nickname(std::move(nickname)), code(std::move(code)),
 	  ws(ioc), handler(&agent, &messagesToSend, &mtx, &cv) {}
 
 WebSocketClient::~WebSocketClient()
@@ -168,7 +168,7 @@ void WebSocketClient::SendToProcessing()
 
 				#ifdef _WIN64
 				// Windows 64-bit specific code
-					if (WaitForSingleObject(processMessageThread.native_handle(), timeoutNumber) != 0x00000000L) {
+					if (WaitForSingleObject(processMessageThread.native_handle(), agent.timeoutNumber) != 0x00000000L) {
 						TerminateThread(processMessageThread.native_handle(), 1);
 					}
 				#elif defined(__linux__)
@@ -264,7 +264,7 @@ void WebSocketClient::ProcessMessage(const std::string& message)
 		case PacketType::LobbyData:
 			// Handle LobbyData
 			handler.HandleLobbyData(packet.payload);
-			std::cout << "Received LobbyData" << std::endl;
+			std::cout << "Received LobbyData: " << std::endl;
 			break;
 		case PacketType::Ready:
 			// Handle Ready

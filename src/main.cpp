@@ -25,20 +25,18 @@ int main(int argc, char** argv) {
 	if (args.count("port")) port = args["port"];
 	if (args.count("nickname")) nickname = args["nickname"];
 	if (args.count("code")) code = args["code"];
-	if (args.count("timeout")) timeoutNumber = args["timeout"];
 
 	// Print the values
 	std::cout << "Host: " << host << "\n";
 	std::cout << "Port: " << port << "\n";
 	std::cout << "Nickname: " << nickname << "\n";
 	std::cout << "Code: " << code << "\n";
-	std::cout << "Timeout number: " << timeoutNumber << "\n";
 
 	// Placeholder for actual websocket client logic
 	std::cout << "Starting client...\n";
 
 	// Create the WebSocket client
-	WebSocketClient client(host, port, nickname, code, std::stoi(timeoutNumber));
+	WebSocketClient client(host, port, nickname, code);
 
 	// Connect to the WebSocket server asynchronously
 	auto connect_future = client.Connect();
