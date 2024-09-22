@@ -4,14 +4,12 @@
 
 class Agent {
  public:
-    // Take overhead into account !!!
-
     /// DO NOT DELETE
     /// lifetime of a thread with NextMove() in milliseconds, CAN BE CHANGED WHENEVER YOU WANT
     int timeoutNumber = 200;
     /// DO NOT DELETE
     /// time in milliseconds after which the NextMove() answer is not sent to server, CAN BE CHANGED WHENEVER YOU WANT
-    int skipResponse = 100;
+    int skipResponse = 90; // 100 - 10 to make sure overhead is included (100 is standard tick)
 
 	Agent();
 	void Init(LobbyData lobbyData);
