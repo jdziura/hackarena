@@ -2,7 +2,7 @@
 
 #pragma once
 
-// First received list of players
+/// First received list of players
 struct LobbyPlayers {
 	std::string id;
 	std::string nickname;
@@ -15,42 +15,50 @@ struct LobbyData {
 	int gridDimension;
 	int numberOfPlayers;
 	int seed;
-	int broadcastInterval; // how many milliseconds in tick
+    /// how many milliseconds in tick
+	int broadcastInterval;
 	bool eagerBroadcast;
 };
 
-// Turret struct for tanks
+/// Turret struct for tanks
 struct Turret {
 	int direction;
-	std::optional<int> bulletCount; // Optional because it's not always present
-	std::optional<int> ticksToRegenBullet; // Optional because it might be null
+    /// Not present in enemies
+	std::optional<int> bulletCount;
+    /// Not present in enemies
+	std::optional<int> ticksToRegenBullet;
 };
 
-// TankPayload struct
+/// TankPayload struct
 struct Tank {
 	std::string ownerId;
 	int direction;
 	Turret turret;
-	std::optional<int> health; // Optional because it's not always present
+    /// Not present in enemies
+	std::optional<int> health;
 };
 
-// BulletPayload struct
+/// BulletPayload struct
 struct Bullet {
 	int id;
 	double speed;
 	int direction;
 };
 
-// ZoneStatus struct to represent various zone states
+/// ZoneStatus struct to represent various zone states
 struct ZoneStatus {
 	std::string type;
-	std::optional<int> remainingTicks; // Used in "beingCaptured" and "beingRetaken"
-	std::optional<std::string> playerId; // Used in "beingCaptured" and "captured"
-	std::optional<std::string> capturedById; // Used in "beingContested" and "beingRetaken"
-	std::optional<std::string> retakenById; // Used in "beingRetaken"
+    /// Used in "beingCaptured" and "beingRetaken"
+	std::optional<int> remainingTicks;
+    /// Used in "beingCaptured" and "captured"
+	std::optional<std::string> playerId;
+    /// Used in "beingContested" and "beingRetaken"
+	std::optional<std::string> capturedById;
+    /// Used in "beingRetaken"
+	std::optional<std::string> retakenById;
 };
 
-// Zone struct to represent a zone on the map
+/// Zone struct to represent a zone on the map
 struct Zone {
 	int x;
 	int y;
@@ -66,15 +74,14 @@ struct Player {
 	std::string nickname;
 	uint32_t color;
 	int ping;
-	std::optional<int> score;  // Optional because it's not always present
-	std::optional<int> ticksToRegen; // Optional because it might be null
+    /// Not present in enemies
+	std::optional<int> score;
+    /// Optional because it might be null
+	std::optional<int> ticksToRegen;
 };
 
-struct Wall {
-	// No additional properties needed for walls in this case
-};
+struct Wall {};
 
-// Define a variant to hold any type of tile object
 using TileVariant = std::variant<Wall, Tank, Bullet>;
 
 /// Map struct:
@@ -85,16 +92,17 @@ using TileVariant = std::variant<Wall, Tank, Bullet>;
 /// Inner arrays represent rows of the map
 /// Item with index [0][0] represents top-left corner of the map
 struct Map {
-	// A 3D vector to hold variants of tile objects
+	/// A 3D vector to hold variants of tile objects
 	std::vector<std::vector<std::vector<TileVariant>>> tiles;
 	std::vector<Zone> zones;
-	std::vector<std::vector<char>> visibility; // 2D array of chars ('0' or '1') same as tiles
+    /// 2D array of chars ('0' or '1') same as tiles
+	std::vector<std::vector<char>> visibility;
 };
 
-// GameState struct
+/// GameState struct
 struct GameState {
 	std::string playerId;
-	int time; // tick number
+	int time; /// tick number
 	std::vector<Player> players;
 	Map map;
 };
@@ -109,13 +117,11 @@ enum class MoveDirection {
 	backward = 1
 };
 
-// Rotation struct
 struct Rotate {
 	RotationDirection tankRotation;
 	RotationDirection turretRotation;
 };
 
-// Move struct
 struct Move {
 	MoveDirection direction;
 };

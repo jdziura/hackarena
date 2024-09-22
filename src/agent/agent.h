@@ -4,7 +4,12 @@
 
 class Agent {
  public:
-    int timeoutNumber = 100; // lifetime of a thread with NextMove() in milliseconds
+    /// DO NOT DELETE
+    /// lifetime of a thread with NextMove() in milliseconds
+    int timeoutNumber = 200;
+    /// DO NOT DELETE
+    /// time in milliseconds after which the NextMove() answer is not sent to server
+    int skipResponse = 100;
 
 	Agent();
 	void Init(LobbyData lobbyData);
