@@ -3,8 +3,8 @@
 #include <utility>
 #include "packet.h"
 
-WebSocketClient::WebSocketClient(std::string  host, std::string  port, std::string nickname, std::string  code)
-	: host(std::move(host)), port(std::move(port)), nickname(std::move(nickname)), code(std::move(code)),
+WebSocketClient::WebSocketClient(std::string  host, std::string  port, std::string nickname, std::string  code, bool debugQuickJoin)
+	: host(std::move(host)), port(std::move(port)), nickname(std::move(nickname)), code(std::move(code)), debugQuickJoin(debugQuickJoin),
 	  ws(ioc), handler(&agent, &messagesToSend, &mtx, &cv) {}
 
 WebSocketClient::~WebSocketClient()
@@ -36,7 +36,7 @@ void WebSocketClient::Stop()
 	#endif
 }
 
-std::string WebSocketClient::ConstructUrl(const std::string& code, const std::string& nickname, bool quickJoin)
+std::string WebSocketClient::ConstructUrl()
 {
 	std::string url = "/?nickname=" + nickname;
 
@@ -44,7 +44,7 @@ std::string WebSocketClient::ConstructUrl(const std::string& code, const std::st
 		url += "&joinCode=" + code;
 	}
 
-	if (quickJoin) {
+	if (debugQuickJoin) {
 		url += "&quickJoin=true";
 	}
 
@@ -70,7 +70,7 @@ void WebSocketClient::DoConnect()
 		auto const results = resolver.resolve(host, port);
 		boost::asio::connect(ws.next_layer(), results.begin(), results.end());
 
-		std::string path = ConstructUrl(code, nickname, true);
+		std::string path = ConstructUrl();
 		ws.handshake(host, path);
 
 		// Set the promise value only once

@@ -7,7 +7,8 @@ int main(int argc, char** argv) {
 	std::string port = "5000";
 	std::string nickname = "empty";
 	std::string code = "";
-	std::string timeoutNumber = "5000";
+    std::string debugQuickJoinString;
+    bool debugQuickJoin = false;
 
 	// Parse command line arguments into a map
 	std::unordered_map<std::string, std::string> args;
@@ -25,6 +26,8 @@ int main(int argc, char** argv) {
 	if (args.count("port")) port = args["port"];
 	if (args.count("nickname")) nickname = args["nickname"];
 	if (args.count("code")) code = args["code"];
+    if (args.count("debug-quick-join")) debugQuickJoinString = args["debug-quick-join"];
+    if(debugQuickJoinString == "true") debugQuickJoin = true;
 
 	// Print the values
 	std::cout << "Host: " << host << "\n";
@@ -36,7 +39,7 @@ int main(int argc, char** argv) {
 	std::cout << "Starting client...\n";
 
 	// Create the WebSocket client
-	WebSocketClient client(host, port, nickname, code);
+	WebSocketClient client(host, port, nickname, code, debugQuickJoin);
 
 	// Connect to the WebSocket server asynchronously
 	auto connect_future = client.Connect();
