@@ -178,8 +178,6 @@ void Handler::UpdateTilesAndVisibility(GameState& gameState) {
 }
 
 void Handler::HandleGameState(nlohmann::json payload) {
-    auto start2 = std::chrono::high_resolution_clock::now();
-
 	GameState gameState;
 
 	// Parse playerId and tick (time)
@@ -287,12 +285,6 @@ void Handler::HandleGameState(nlohmann::json payload) {
 	std::chrono::duration<double, std::milli> duration = end - start;
 
 	if(duration.count() < agentPtr->skipResponse) SendResponse(response);
-
-    auto end2 = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double, std::milli> duration2 = end2 - start2; // Duration in milliseconds
-
-    // Log the duration
-    std::cout << "Parsing + Move took " << duration2.count() << " ms." << std::endl;
 }
 
 void Handler::HandleGameEnded(nlohmann::json payload) {
