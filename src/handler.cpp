@@ -2,7 +2,6 @@
 #include "packet.h"
 
 TileVariant Handler::ParseTileVariant(const nlohmann::json& tileJson) {
-	// Check the type of the tile
 	std::string type = tileJson["type"].get<std::string>();
 
 	if (type == "wall") {
@@ -74,7 +73,7 @@ TileVariant Handler::ParseTileVariant(const nlohmann::json& tileJson) {
 		if (!tileJson["payload"].contains("direction") || tileJson["payload"]["direction"].is_null()) {
 			throw std::runtime_error("Missing or null direction in bullet payload.");
 		}
-		bullet.direction = tileJson["payload"]["direction"].get<int>();
+		bullet.direction = tileJson["payload"]["direction"].get<BulletDirection>();
 
 		return bullet;
 	}
@@ -150,22 +149,6 @@ void Handler::HandleGameState(nlohmann::json payload) {
 	// Parse the map
 	const auto& mapJson = payload["map"];
 
-	// Parse the tiles (3D vector)
-	for (const auto& layer : mapJson["tiles"]) {
-		std::vector<std::vector<TileVariant>> tileLayer;
-		for (const auto& row : layer) {
-			std::vector<TileVariant> tileRow;
-			for (const auto& tile : row) {
-				TileVariant tileVariant;
-				// Assuming you have a method to handle TileVariant
-				tileVariant = ParseTileVariant(tile);
-				tileRow.push_back(tileVariant);
-			}
-			tileLayer.push_back(tileRow);
-		}
-		gameState.map.tiles.push_back(tileLayer);
-	}
-
 	// Parse zones
 	for (const auto& zoneJson : mapJson["zones"]) {
 		Zone zone;
@@ -173,7 +156,7 @@ void Handler::HandleGameState(nlohmann::json payload) {
 		zone.y = zoneJson["y"].get<int>();
 		zone.width = zoneJson["width"].get<int>();
 		zone.height = zoneJson["height"].get<int>();
-		zone.index = zoneJson["index"].get<int>();
+		zone.name = zoneJson["index"].get<char>();
 
 		// Parse ZoneStatus (with optional fields)
 		ZoneStatus zoneStatus;
@@ -202,16 +185,42 @@ void Handler::HandleGameState(nlohmann::json payload) {
 	size_t numRows = visibilityJson.size();
 	size_t numCols = visibilityJson[0].get<std::string>().size();
 
-	// Initialize the transposed visibility array
 	gameState.map.visibility.resize(numCols, std::vector<char>(numRows));
-
-	// Fill the transposed visibility array
-	for (size_t i = 0; i < numRows; ++i) {
+    	for (size_t i = 0; i < numRows; ++i) {
 		std::string row = visibilityJson[i].get<std::string>();
 		for (size_t j = 0; j < numCols; ++j) {
-			gameState.map.visibility[j][i] = row[j];  // Transpose the data
+			gameState.map.visibility[i][j] = row[j];
 		}
 	}
+
+    const auto& layer = payload["map"]["tiles"];
+
+    size_t numRows2 = layer.size();
+    size_t numCols2 = layer[0].size(); // Assuming at least one row exists
+
+    // Initialize the transposed vector with the correct dimensions
+    std::vector<std::vector<TileVariant>> transposedTileLayer(numCols2, std::vector<TileVariant>(numRows2));
+
+    // Loop through each row in the tiles layer
+    for (size_t i = 0; i < numRows2; ++i) {
+        const auto& rowJson = layer[i];
+
+        // Loop through each tile in the row
+        for (size_t j = 0; j < rowJson.size(); ++j) {
+            const auto& tileJson = rowJson[j];
+
+            if (tileJson.empty()) {
+                // Handle empty tiles appropriately
+                transposedTileLayer[j][i] = None{false, 63};
+                continue;
+            }
+
+            // Use the ParseTileVariant function to parse each tile
+            transposedTileLayer[j][i] = ParseTileVariant(tileJson[0]); // Access the first item in the tile array
+        }
+    }
+
+    gameState.map.tiles = transposedTileLayer;
 
 	// If agent move takes less than 5 seconds send response
 	auto start = std::chrono::high_resolution_clock::now();

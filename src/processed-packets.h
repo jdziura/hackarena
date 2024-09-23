@@ -48,13 +48,24 @@ struct Tank {
 	Turret turret;
     /// Not present in enemies
 	std::optional<int> health;
+    bool isVisible;
+    char zoneName; // '?' or 63 for no zone
+};
+
+enum class BulletDirection {
+    up = 0,
+    right = 1,
+    down = 2,
+    left = 3
 };
 
 /// BulletPayload struct
 struct Bullet {
 	int id;
 	double speed;
-	int direction;
+    BulletDirection direction;
+    bool isVisible;
+    char zoneName; // '?' or 63 for no zone
 };
 
 /// ZoneStatus struct to represent various zone states
@@ -76,7 +87,7 @@ struct Zone {
 	int y;
 	int width;
 	int height;
-	int index;
+	char name;
 	ZoneStatus status;
 };
 
@@ -94,18 +105,21 @@ struct Player {
 
 struct Wall {};
 
-using TileVariant = std::variant<Wall, Tank, Bullet>;
+struct None {
+    bool isVisible;
+    char zoneName; // '?' or 63 for no zone
+};
+
+using TileVariant = std::variant<Wall, Tank, Bullet, None>;
 
 /// Map struct:
 /// Tiles are stored in a 2D array
-/// where each tile is a list of items in this tile
-/// Currently there can be at most one item in a tile
-/// Outer array represents columns of the map
-/// Inner arrays represent rows of the map
+/// Inner array represents columns of the map
+/// Outer arrays represent rows of the map
 /// Item with index [0][0] represents top-left corner of the map
 struct Map {
 	/// A 3D vector to hold variants of tile objects
-	std::vector<std::vector<std::vector<TileVariant>>> tiles;
+	std::vector<std::vector<TileVariant>> tiles;
 	std::vector<Zone> zones;
     /// 2D array of chars ('0' or '1') same as tiles
 	std::vector<std::vector<char>> visibility;
