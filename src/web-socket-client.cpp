@@ -239,7 +239,7 @@ void WebSocketClient::ProcessMessage(const std::string& message)
 		// Deserialize Packet
 		Packet packet;
 		packet.packetType = static_cast<PacketType>(jsonMessage.at("type").get<uint64_t>());
-		packet.payload = jsonMessage.at("payload");
+        if (jsonMessage.contains("payload")) packet.payload = jsonMessage.at("payload");
 
 		// Process based on PacketType
 		switch (packet.packetType) {
@@ -287,13 +287,9 @@ void WebSocketClient::ProcessMessage(const std::string& message)
 void WebSocketClient::RespondToPing()
 {
 	try {
-		// Construct a Pong packet
-		Packet pongPacket = Packet::ConstructPongPacket();
-
 		// Serialize Packet to JSON
-		nlohmann::ordered_json jsonResponse;
-		jsonResponse["type"] = static_cast<uint64_t>(pongPacket.packetType);
-		jsonResponse["payload"] = nlohmann::json::object();
+		nlohmann::json jsonResponse;
+		jsonResponse["type"] = static_cast<uint64_t>(PacketType::Pong);
 
 		std::string responseString = jsonResponse.dump();
 

@@ -6,21 +6,17 @@ enum class PacketType {
 	Ping = 17,
 	Pong = 18,
 	GameStart = 49,
-	TankMovement = 65,
-	TankRotation = 66,
-	TankShoot = 67,
-	GameState = 50,
-	LobbyData = 33,
+	TankMovement = 73,
+	TankRotation = 74,
+	TankShoot = 75,
+	GameState = 58,
+	LobbyData = 41,
 	Ready = 102,
-	GameEnded = 103
+	GameEnded = 59
 };
 
 struct Packet {
 	PacketType packetType;
 	nlohmann::json payload;
-
-	static Packet ConstructPongPacket() {
-		return { PacketType::Pong, nlohmann::json{} };
-	}
 };
 

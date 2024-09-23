@@ -1,4 +1,5 @@
 #include "handler.h"
+#include "packet.h"
 
 TileVariant Handler::ParseTileVariant(const nlohmann::json& tileJson) {
 	// Check the type of the tile
@@ -84,24 +85,24 @@ TileVariant Handler::ParseTileVariant(const nlohmann::json& tileJson) {
 
 // Function to convert ResponseVariant to string
 std::string Handler::ResponseToString(const ResponseVariant& response) {
-	nlohmann::json jsonResponse;
+	nlohmann::ordered_json jsonResponse;
 
 	std::visit([&jsonResponse](const auto& resp) {
 	  using T = std::decay_t<decltype(resp)>;
 	  if constexpr (std::is_same_v<T, Rotate>) {
-		  jsonResponse["type"] = 66; // PacketType for TankRotation
+		  jsonResponse["type"] = PacketType::TankRotation;
 		  jsonResponse["payload"]["tankRotation"] = static_cast<int>(resp.tankRotation);
 		  jsonResponse["payload"]["turretRotation"] = static_cast<int>(resp.turretRotation);
 	  } else if constexpr (std::is_same_v<T, Move>) {
-		  jsonResponse["type"] = 65; // PacketType for TankMovement
+		  jsonResponse["type"] = PacketType::TankMovement;
 		  jsonResponse["payload"]["direction"] = static_cast<int>(resp.direction);
 	  } else if constexpr (std::is_same_v<T, Shoot>) {
-		  jsonResponse["type"] = 67; // PacketType for TankShoot
-		  jsonResponse["payload"] = nlohmann::json::object(); // Empty payload
+		  jsonResponse["type"] = PacketType::TankShoot;
+		  //jsonResponse["payload"] = nlohmann::json::object(); // Empty payload
 	  } else if constexpr (std::is_same_v<T, Wait>) {
-		  jsonResponse["type"] = 66; // Same as TankRotation
-		  jsonResponse["payload"]["tankRotation"] = nullptr; // Null for tankRotation
-		  jsonResponse["payload"]["turretRotation"] = nullptr; // Null for turretRotation
+		  jsonResponse["type"] = PacketType::TankRotation;
+		  //jsonResponse["payload"]["tankRotation"] = nullptr; // Null for tankRotation
+		  //jsonResponse["payload"]["turretRotation"] = nullptr; // Null for turretRotation
 	  }
 	}, response);
 
