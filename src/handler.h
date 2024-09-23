@@ -15,6 +15,7 @@ class Handler {
 	TileVariant ParseTileVariant(const nlohmann::json& tileJson);
 	std::string ResponseToString(const ResponseVariant& response);
 	void SendResponse(const ResponseVariant& response);
+    void UpdateTilesAndVisibility(GameState& gameState);
 
 	Agent *agentPtr;
 	std::queue<std::string> *messagesToSendPtr;

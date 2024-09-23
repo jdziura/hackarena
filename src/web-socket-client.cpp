@@ -192,7 +192,7 @@ void WebSocketClient::SendToProcessing()
 				std::chrono::duration<double, std::milli> duration = end - start; // Duration in milliseconds
 
 				// Log the duration
-				//std::cout << "NextMove took " << duration.count() << " ms." << std::endl;
+				std::cout << "NextMove took " << duration.count() << " ms." << std::endl;
 
 				lock.lock();
 			}
@@ -244,36 +244,22 @@ void WebSocketClient::ProcessMessage(const std::string& message)
 		// Process based on PacketType
 		switch (packet.packetType) {
 		case PacketType::Ping:
-			// Handle Ping
 			RespondToPing();
-			std::cout << "Received Ping" << std::endl;
 			break;
 		case PacketType::Pong:
-			// Handle Pong
-			std::cout << "Received Pong" << std::endl;
 			break;
 		case PacketType::GameStart:
-			// Handle GameStart
-			std::cout << "Received GameStart" << std::endl;
 			break;
 		case PacketType::GameState:
-			// Handle GameState
 			handler.HandleGameState(packet.payload);
-			std::cout << "Received GameState" << std::endl;
 			break;
 		case PacketType::LobbyData:
-			// Handle LobbyData
 			handler.HandleLobbyData(packet.payload);
-			std::cout << "Received LobbyData" << std::endl;
 			break;
 		case PacketType::Ready:
-			// Handle Ready
-			std::cout << "Received Ready" << std::endl;
 			break;
 		case PacketType::GameEnded:
-			// Handle GameEnded
 			handler.HandleGameEnded(packet.payload);
-			std::cout << "Received GameEnded " << message << std::endl;
             reconnectStartTime = std::chrono::steady_clock::now() - std::chrono::seconds(11);
             isReconnecting = true;
             Stop();

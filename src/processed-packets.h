@@ -103,7 +103,9 @@ struct Player {
 	std::optional<int> ticksToRegen;
 };
 
-struct Wall {};
+struct Wall {
+    char zoneName; // '?' or 63 for no zone
+};
 
 struct None {
     bool isVisible;

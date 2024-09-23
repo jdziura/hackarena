@@ -120,6 +120,63 @@ void Handler::SendResponse(const ResponseVariant& response) {
 	cvPtr->notify_one();
 }
 
+void Handler::UpdateTilesAndVisibility(GameState& gameState) {
+    const auto& zones = gameState.map.zones;
+    const auto& visibility = gameState.map.visibility;
+
+    // Create a map for quick zone lookups
+    std::unordered_map<std::pair<size_t, size_t>, char, boost::hash<std::pair<size_t, size_t>>> zoneMap;
+    for (const auto& zone : zones) {
+        for (int x = zone.x; x < zone.x + zone.width; ++x) {
+            for (int y = zone.y; y < zone.y + zone.height; ++y) {
+                zoneMap[{x, y}] = zone.name;  // Store the zone name for quick access
+            }
+        }
+    }
+
+    // Iterate through each tile in the tiles layer
+    for (size_t row = 0; row < gameState.map.tiles.size(); ++row) {
+        for (size_t col = 0; col < gameState.map.tiles[row].size(); ++col) {
+            auto& tile = gameState.map.tiles[row][col];
+
+            // Determine the zone name based on the zone map
+            auto zoneIt = zoneMap.find({col, row});  // Notice the order: (x, y) corresponds to (col, row)
+            char zoneName = zoneIt != zoneMap.end() ? zoneIt->second : '?'; // Default to '?' if no zone
+
+            // Update tile based on its type and zone name
+            std::visit([zoneName](auto& tileObj) {
+                using T = std::decay_t<decltype(tileObj)>;
+                if constexpr (std::is_same_v<T, Wall>) {
+                    tileObj.zoneName = zoneName;  // Set zone name for Wall
+                } else if constexpr (std::is_same_v<T, Tank>) {
+                    tileObj.zoneName = zoneName;  // Set zone name for Tank
+                } else if constexpr (std::is_same_v<T, Bullet>) {
+                    tileObj.zoneName = zoneName;  // Set zone name for Bullet
+                } else if constexpr (std::is_same_v<T, None>) {
+                    tileObj.zoneName = zoneName;  // Set zone name for None
+                }
+            }, tile);
+
+            // Update visibility based on the provided visibility data
+            if (row < visibility.size() && col < visibility[row].size()) {
+                char visibilityChar = visibility[row][col];
+
+                // Update visibility based on the visibility character
+                std::visit([visibilityChar](auto& tileObj) {
+                    using T = std::decay_t<decltype(tileObj)>;
+                    if constexpr (std::is_same_v<T, Tank>) {
+                        tileObj.isVisible = (visibilityChar == '1');
+                    } else if constexpr (std::is_same_v<T, Bullet>) {
+                        tileObj.isVisible = (visibilityChar == '1');
+                    } else if constexpr (std::is_same_v<T, None>) {
+                        tileObj.isVisible = (visibilityChar == '1');
+                    }
+                }, tile);
+            }
+        }
+    }
+}
+
 void Handler::HandleGameState(nlohmann::json payload) {
 	GameState gameState;
 
@@ -198,8 +255,7 @@ void Handler::HandleGameState(nlohmann::json payload) {
     size_t numRows2 = layer.size();
     size_t numCols2 = layer[0].size(); // Assuming at least one row exists
 
-    // Initialize the transposed vector with the correct dimensions
-    std::vector<std::vector<TileVariant>> transposedTileLayer(numCols2, std::vector<TileVariant>(numRows2));
+    gameState.map.tiles.resize(numCols2, std::vector<TileVariant>(numRows2));
 
     // Loop through each row in the tiles layer
     for (size_t i = 0; i < numRows2; ++i) {
@@ -211,16 +267,16 @@ void Handler::HandleGameState(nlohmann::json payload) {
 
             if (tileJson.empty()) {
                 // Handle empty tiles appropriately
-                transposedTileLayer[j][i] = None{false, 63};
+                gameState.map.tiles[j][i] = None{false, 63};
                 continue;
             }
 
             // Use the ParseTileVariant function to parse each tile
-            transposedTileLayer[j][i] = ParseTileVariant(tileJson[0]); // Access the first item in the tile array
+            gameState.map.tiles[j][i] = ParseTileVariant(tileJson[0]); // Access the first item in the tile array
         }
     }
 
-    gameState.map.tiles = transposedTileLayer;
+    UpdateTilesAndVisibility(gameState);
 
 	// If agent move takes less than 5 seconds send response
 	auto start = std::chrono::high_resolution_clock::now();
