@@ -14,5 +14,5 @@ class Agent {
 	Agent();
 	void Init(LobbyData lobbyData);
 	ResponseVariant NextMove(GameState gameState);
-	void OnGameEnded();
+	void OnGameEnded(EndGameLobby endGameLobby);
 };

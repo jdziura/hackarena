@@ -192,7 +192,7 @@ void WebSocketClient::SendToProcessing()
 				std::chrono::duration<double, std::milli> duration = end - start; // Duration in milliseconds
 
 				// Log the duration
-				std::cout << "NextMove took " << duration.count() << " ms." << std::endl;
+				//std::cout << "NextMove took " << duration.count() << " ms." << std::endl;
 
 				lock.lock();
 			}
@@ -264,7 +264,7 @@ void WebSocketClient::ProcessMessage(const std::string& message)
 		case PacketType::LobbyData:
 			// Handle LobbyData
 			handler.HandleLobbyData(packet.payload);
-			std::cout << "Received LobbyData: " << std::endl;
+			std::cout << "Received LobbyData" << std::endl;
 			break;
 		case PacketType::Ready:
 			// Handle Ready
@@ -273,10 +273,13 @@ void WebSocketClient::ProcessMessage(const std::string& message)
 		case PacketType::GameEnded:
 			// Handle GameEnded
 			handler.HandleGameEnded(packet.payload);
-			std::cout << "Received GameEnded" << std::endl;
+			std::cout << "Received GameEnded " << message << std::endl;
+            reconnectStartTime = std::chrono::steady_clock::now() - std::chrono::seconds(11);
+            isReconnecting = true;
+            Stop();
 			break;
 		default:
-			std::cerr << "Unknown packet type" << std::endl;
+			std::cerr << "Unknown packet type: " << message << std::endl;
 			break;
 		}
 	} catch (const std::exception& e) {
@@ -307,7 +310,7 @@ void WebSocketClient::Reconnect()
 	// Check elapsed time
 	auto elapsedTime = std::chrono::steady_clock::now() - reconnectStartTime;
 	if (std::chrono::duration_cast<std::chrono::seconds>(elapsedTime).count() > 10) {
-		std::cerr << "\nReconnection attempts timed out after 10 seconds.\n";
+		std::cerr << "\nReconnection attempts stopped\n";
 		Stop();
 		return;
 	}

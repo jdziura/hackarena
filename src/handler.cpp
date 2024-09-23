@@ -222,7 +222,22 @@ void Handler::HandleGameState(nlohmann::json payload) {
 	if(duration.count() < agentPtr->skipResponse) SendResponse(response);
 }
 
-void Handler::HandleGameEnded(nlohmann::json payload) {}
+void Handler::HandleGameEnded(nlohmann::json payload) {
+    EndGameLobby endGameLobby;
+
+    // Extract players array and populate the players vector
+    for (const auto& player : payload.at("players")) {
+        EndGamePlayer lobbyPlayer;
+        lobbyPlayer.id = player.at("id").get<std::string>();
+        lobbyPlayer.nickname = player.at("nickname").get<std::string>();
+        lobbyPlayer.color = player.at("color").get<uint32_t>();
+        lobbyPlayer.score = player.at("score").get<int>();
+
+        endGameLobby.players.push_back(lobbyPlayer);
+    }
+
+    agentPtr->OnGameEnded(endGameLobby);
+}
 
 void Handler::HandleLobbyData(nlohmann::json payload) {
 	LobbyData lobbyData;
@@ -232,7 +247,7 @@ void Handler::HandleLobbyData(nlohmann::json payload) {
 
 	// Extract players array and populate the players vector
 	for (const auto& player : payload.at("players")) {
-		LobbyPlayers lobbyPlayer;
+		LobbyPlayer lobbyPlayer;
 		lobbyPlayer.id = player.at("id").get<std::string>();
 		lobbyPlayer.nickname = player.at("nickname").get<std::string>();
 		lobbyPlayer.color = player.at("color").get<uint32_t>();

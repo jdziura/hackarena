@@ -3,15 +3,27 @@
 #pragma once
 
 /// First received list of players
-struct LobbyPlayers {
+struct LobbyPlayer {
 	std::string id;
 	std::string nickname;
 	uint32_t color;
 };
 
+/// Player received at game end
+struct EndGamePlayer {
+    std::string id;
+    std::string nickname;
+    uint32_t color;
+    int score;
+};
+
+struct EndGameLobby {
+    std::vector<EndGamePlayer> players;
+};
+
 struct LobbyData {
 	std::string myId;
-	std::vector<LobbyPlayers> players;
+	std::vector<LobbyPlayer> players;
 	int gridDimension;
 	int numberOfPlayers;
 	int seed;

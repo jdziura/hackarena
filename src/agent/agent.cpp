@@ -4,4 +4,4 @@
 Agent::Agent() = default;
 void Agent::Init(LobbyData lobbyData) {}
 ResponseVariant Agent::NextMove(GameState gameState) {return Wait{};}
-void Agent::OnGameEnded() {}
+void Agent::OnGameEnded(EndGameLobby endGameLobby) {}
