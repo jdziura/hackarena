@@ -42,7 +42,4 @@ class WebSocketClient {
 	std::queue<std::string> messagesReceived;
 	std::mutex mtxR;
 	std::condition_variable cvR;
-	bool isPromiseSet = false;
-	bool isReconnecting = false;
-	std::chrono::steady_clock::time_point reconnectStartTime;
 };

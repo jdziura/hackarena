@@ -72,30 +72,13 @@ void WebSocketClient::DoConnect()
 
 		std::string path = ConstructUrl();
 		ws.handshake(host, path);
-
-		// Set the promise value only once
-		if (!isPromiseSet) {
-			connectPromise.set_value(true);
-			isPromiseSet = true;
-		}
-		isReconnecting = false;
+        connectPromise.set_value(true);
+        
 		// Start reading and writing threads
 		Run();
 	} catch (std::exception& e) {
 		std::cerr << "Connection failed: " << e.what() << std::endl;
-
-		// Set the promise to false only on the first failure
-		if (!isPromiseSet) {
-			connectPromise.set_value(false);
-			isPromiseSet = true;
-		}
-
-		// Start the reconnection timer
-		if (!isReconnecting) {
-			reconnectStartTime = std::chrono::steady_clock::now();
-			isReconnecting = true;
-		}
-		Reconnect();
+        connectPromise.set_value(false);
 	}
 }
 
@@ -136,12 +119,7 @@ void WebSocketClient::DoRead()
 		std::cerr << "Read error: " << e.message() << std::endl;
 	} catch (std::exception& e) {
 		std::cerr << "Read exception: " << e.what() << std::endl;
-		// Start the reconnection timer
-		if (!isReconnecting) {
-			reconnectStartTime = std::chrono::steady_clock::now();
-			isReconnecting = true;
-		}
-		Reconnect();
+		Stop();
 	}
 	catch (...) {
 		std::cerr << "Exception!!!" <<  std::endl;
@@ -221,12 +199,7 @@ void WebSocketClient::DoWrite()
 		std::cerr << "Write error: " << e.message() << std::endl;
 	} catch (std::exception& e) {
 		std::cerr << "Write exception: " << e.what() << std::endl;
-		// Start the reconnection timer
-		if (!isReconnecting) {
-			reconnectStartTime = std::chrono::steady_clock::now();
-			isReconnecting = true;
-		}
-		Reconnect();
+		Stop();
 	}
 }
 
@@ -260,8 +233,6 @@ void WebSocketClient::ProcessMessage(const std::string& message)
 			break;
 		case PacketType::GameEnded:
 			handler.HandleGameEnded(packet.payload);
-            reconnectStartTime = std::chrono::steady_clock::now() - std::chrono::seconds(11);
-            isReconnecting = true;
             Stop();
 			break;
 		default:
@@ -288,27 +259,5 @@ void WebSocketClient::RespondToPing()
 		cv.notify_one();
 	} catch (const std::exception& e) {
 		std::cerr << "Error responding to Ping: " << e.what() << std::endl;
-	}
-}
-
-void WebSocketClient::Reconnect()
-{
-	// Check elapsed time
-	auto elapsedTime = std::chrono::steady_clock::now() - reconnectStartTime;
-	if (std::chrono::duration_cast<std::chrono::seconds>(elapsedTime).count() > 10) {
-		std::cerr << "\nReconnection attempts stopped\n";
-		Stop();
-		return;
-	}
-
-	// Reset the promise for a new connection attempt
-	connectPromise = std::promise<bool>();
-	isPromiseSet = false; // Reset the flag
-
-	try {
-		DoConnect();
-	} catch (std::exception& e) {
-		std::cerr << "Reconnection attempt failed: " << e.what() << std::endl;
-		Reconnect(); // Recursive call to keep trying to reconnect
 	}
 }
