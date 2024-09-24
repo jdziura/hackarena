@@ -151,7 +151,7 @@ void WebSocketClient::SendToProcessing()
 				// Linux-specific code
 					struct timespec ts{};
 					clock_gettime(CLOCK_REALTIME, &ts);
-					ts.tv_sec += timeoutNumber / 1000;
+					ts.tv_sec += agent.timeoutNumber / 1000;
 
 					if (pthread_timedjoin_np(processMessageThread.native_handle(), nullptr, &ts) != 0) {
 						pthread_cancel(processMessageThread.native_handle());
