@@ -30,13 +30,13 @@ int main(int argc, char** argv) {
     if(debugQuickJoinString == "true") debugQuickJoin = true;
 
 	// Print the values
-	std::cout << "Host: " << host << "\n";
-	std::cout << "Port: " << port << "\n";
-	std::cout << "Nickname: " << nickname << "\n";
-	std::cout << "Code: " << code << "\n";
+	std::cout << "Host: " << host << std::endl << std::flush;
+	std::cout << "Port: " << port << std::endl << std::flush;
+	std::cout << "Nickname: " << nickname << std::endl << std::flush;
+	std::cout << "Code: " << code << std::endl << std::flush;
 
 	// Placeholder for actual websocket client logic
-	std::cout << "Starting client...\n";
+	std::cout << "Starting client..." << std::endl << std::flush;
 
 	// Create the WebSocket client
 	WebSocketClient client(host, port, nickname, code, debugQuickJoin);
@@ -46,12 +46,12 @@ int main(int argc, char** argv) {
 
 	// Wait for the connection to be established
 	if (!connect_future.get()) {
-		std::cerr << "Failed to Connect to the WebSocket server.\n";
+		std::cerr << "Failed to Connect to the WebSocket server." << std::endl << std::flush;
 		client.Stop();
 		return EXIT_FAILURE;
 	}
 
-	std::cout << "Connected successfully. Running the client...\n";
+	std::cout << "Connected successfully. Running the client..." << std::endl << std::flush;
 
 	return EXIT_SUCCESS;
 }

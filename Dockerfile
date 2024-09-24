@@ -23,17 +23,20 @@ RUN git clone https://github.com/microsoft/vcpkg.git $VCPKG_ROOT \
     && git checkout master \
     && ./bootstrap-vcpkg.sh
 
+# Copy only the vcpkg.json first to leverage Docker caching for dependencies
+COPY vcpkg.json /app/vcpkg.json
+
 # Set the working directory
 WORKDIR /app
 
-# Copy your application source code
-COPY . .
-
 # Install dependencies using vcpkg
 RUN $VCPKG_ROOT/vcpkg install --triplet x64-linux
+
+# Now copy the rest of the project files
+COPY . /app
 
 # Build the application
 RUN cmake . $CMAKE_ARGS -DCMAKE_EXE_LINKER_FLAGS="-pthread" && make
 
 # Specify the command to run your application (replace `your_executable` with the actual name)
-CMD ["./HackArena2024H2_Cxx"]
+ENTRYPOINT ["./HackArena2024H2_Cxx"]

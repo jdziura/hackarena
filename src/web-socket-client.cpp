@@ -21,7 +21,7 @@ void WebSocketClient::Stop()
 			ws.close(boost::beast::websocket::close_code::normal);
 		}
 	} catch (const std::exception& e) {
-		std::cerr << "Error closing WebSocket: " << e.what() << std::endl;
+		std::cerr << "Error closing WebSocket: " << e.what() << std::endl << std::flush;
 	}
 	#ifdef _WIN64
 		// Windows 64-bit specific code
@@ -73,11 +73,11 @@ void WebSocketClient::DoConnect()
 		std::string path = ConstructUrl();
 		ws.handshake(host, path);
         connectPromise.set_value(true);
-        
+
 		// Start reading and writing threads
 		Run();
 	} catch (std::exception& e) {
-		std::cerr << "Connection failed: " << e.what() << std::endl;
+		std::cerr << "Connection failed: " << e.what() << std::endl << std::flush;
         connectPromise.set_value(false);
 	}
 }
@@ -116,13 +116,13 @@ void WebSocketClient::DoRead()
 			cvR.notify_one();
 		}
 	} catch (boost::beast::error_code& e) {
-		std::cerr << "Read error: " << e.message() << std::endl;
+		std::cerr << "Read error: " << e.message() << std::endl << std::flush;
 	} catch (std::exception& e) {
-		std::cerr << "Read exception: " << e.what() << std::endl;
+		std::cerr << "Read exception: " << e.what() << std::endl << std::flush;
 		Stop();
 	}
 	catch (...) {
-		std::cerr << "Exception!!!" <<  std::endl;
+		std::cerr << "Exception!!!" <<  std::endl << std::flush;
 	}
 }
 
@@ -162,13 +162,13 @@ void WebSocketClient::SendToProcessing()
 					#error "Unsupported platform"
 				#endif
 
-				else { processMessageThread.join(); }
+				processMessageThread.join();
 
 				lock.lock();
 			}
 		}
 	} catch (std::exception& e) {
-		std::cerr << "Send to processing exception: " << e.what() << std::endl;
+		std::cerr << "Send to processing exception: " << e.what() << std::endl << std::flush;
 	}
 }
 
@@ -188,9 +188,9 @@ void WebSocketClient::DoWrite()
 			}
 		}
 	} catch (boost::beast::error_code& e) {
-		std::cerr << "Write error: " << e.message() << std::endl;
+		std::cerr << "Write error: " << e.message() << std::endl << std::flush;
 	} catch (std::exception& e) {
-		std::cerr << "Write exception: " << e.what() << std::endl;
+		std::cerr << "Write exception: " << e.what() << std::endl << std::flush;
 		Stop();
 	}
 }
@@ -228,11 +228,11 @@ void WebSocketClient::ProcessMessage(const std::string& message)
             Stop();
 			break;
 		default:
-			std::cerr << "Unknown packet type: " << message << std::endl;
+			std::cerr << "Unknown packet type: " << message << std::endl << std::flush;
 			break;
 		}
 	} catch (const std::exception& e) {
-		std::cerr << "Error processing message: " << e.what() << std::endl;
+		std::cerr << "Error processing message: " << e.what() << std::endl << std::flush;
 	}
 }
 
@@ -250,6 +250,6 @@ void WebSocketClient::RespondToPing()
 		messagesToSend.push(responseString);
 		cv.notify_one();
 	} catch (const std::exception& e) {
-		std::cerr << "Error responding to Ping: " << e.what() << std::endl;
+		std::cerr << "Error responding to Ping: " << e.what() << std::endl << std::flush;
 	}
 }
