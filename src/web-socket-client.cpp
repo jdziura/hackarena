@@ -144,27 +144,7 @@ void WebSocketClient::SendToProcessing()
 				  ProcessMessage(message);
 				});
 
-				#ifdef _WIN64
-				// Windows 64-bit specific code
-					if (WaitForSingleObject(processMessageThread.native_handle(), agent.timeoutNumber) != 0x00000000L) {
-						TerminateThread(processMessageThread.native_handle(), 1);
-					}
-				#elif defined(__linux__)
-				// Linux-specific code
-					struct timespec ts{};
-					clock_gettime(CLOCK_REALTIME, &ts);
-					ts.tv_sec += agent.timeoutNumber / 1000;
-
-					if (pthread_timedjoin_np(processMessageThread.native_handle(), nullptr, &ts) != 0) {
-						pthread_cancel(processMessageThread.native_handle());
-					}
-				#elif defined(__APPLE__)
-					// macOS-specific code
-				#else
-					#error "Unsupported platform"
-				#endif
-
-				processMessageThread.join();
+				processMessageThread.detach();
 
 				lock.lock();
 			}
