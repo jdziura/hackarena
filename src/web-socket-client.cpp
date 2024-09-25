@@ -48,6 +48,8 @@ std::string WebSocketClient::ConstructUrl()
 		url += "&quickJoin=true";
 	}
 
+    url+= "&playerType=hackatonBot";
+
 	return url;
 }
 
@@ -227,6 +229,12 @@ void WebSocketClient::ProcessMessage(const std::string& message)
 			handler.HandleGameEnded(packet.payload);
             Stop();
 			break;
+        case PacketType::ConnectionOkay:
+            break;
+        case PacketType::ConnectionRejected:
+            std::cerr << "Connection Rejected: " << packet.payload["reason"].get<std::string>() << std::endl << std::flush;
+            Stop();
+            break;
 		default:
 			std::cerr << "Unknown packet type: " << message << std::endl << std::flush;
 			break;

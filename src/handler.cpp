@@ -83,25 +83,28 @@ TileVariant Handler::ParseTileVariant(const nlohmann::json& tileJson) {
 }
 
 // Function to convert ResponseVariant to string
-std::string Handler::ResponseToString(const ResponseVariant& response) {
+std::string Handler::ResponseToString(const ResponseVariant& response, std::string& id) {
 	nlohmann::ordered_json jsonResponse;
 
-	std::visit([&jsonResponse](const auto& resp) {
+	std::visit([&jsonResponse, &id](const auto& resp) {
 	  using T = std::decay_t<decltype(resp)>;
 	  if constexpr (std::is_same_v<T, Rotate>) {
 		  jsonResponse["type"] = PacketType::TankRotation;
 		  jsonResponse["payload"]["tankRotation"] = static_cast<int>(resp.tankRotation);
 		  jsonResponse["payload"]["turretRotation"] = static_cast<int>(resp.turretRotation);
+          jsonResponse["payload"]["gameStateId"] = id;
 	  } else if constexpr (std::is_same_v<T, Move>) {
 		  jsonResponse["type"] = PacketType::TankMovement;
 		  jsonResponse["payload"]["direction"] = static_cast<int>(resp.direction);
+          jsonResponse["payload"]["gameStateId"] = id;
 	  } else if constexpr (std::is_same_v<T, Shoot>) {
 		  jsonResponse["type"] = PacketType::TankShoot;
-		  //jsonResponse["payload"] = nlohmann::json::object(); // Empty payload
+		  jsonResponse["payload"]["gameStateId"] = id;
 	  } else if constexpr (std::is_same_v<T, Wait>) {
 		  jsonResponse["type"] = PacketType::TankRotation;
-		  //jsonResponse["payload"]["tankRotation"] = nullptr; // Null for tankRotation
-		  //jsonResponse["payload"]["turretRotation"] = nullptr; // Null for turretRotation
+		  jsonResponse["payload"]["tankRotation"] = nullptr; // Null for tankRotation
+		  jsonResponse["payload"]["turretRotation"] = nullptr; // Null for turretRotation
+          jsonResponse["payload"]["gameStateId"] = id;
 	  }
 	}, response);
 
@@ -109,8 +112,8 @@ std::string Handler::ResponseToString(const ResponseVariant& response) {
 }
 
 // Example of sending the response over WebSocket
-void Handler::SendResponse(const ResponseVariant& response) {
-	std::string responseString = ResponseToString(response);
+void Handler::SendResponse(const ResponseVariant& response, std::string& id) {
+	std::string responseString = ResponseToString(response, id);
 
 	// Send the response over the WebSocket
 	{
@@ -181,7 +184,7 @@ void Handler::HandleGameState(nlohmann::json payload) {
 	GameState gameState;
 
 	// Parse playerId and tick (time)
-	gameState.playerId = payload["playerId"].get<std::string>();
+	std::string id = payload["id"].get<std::string>();
 	gameState.time = payload["tick"].get<int>();
 
 	// Parse the players
@@ -284,7 +287,7 @@ void Handler::HandleGameState(nlohmann::json payload) {
 	auto end = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double, std::milli> duration = end - start;
 
-	if(duration.count() < agentPtr->skipResponse) SendResponse(response);
+	if(duration.count() < agentPtr->skipResponse) SendResponse(response, id);
 }
 
 void Handler::HandleGameEnded(nlohmann::json payload) {

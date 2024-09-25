@@ -129,8 +129,8 @@ struct Map {
 
 /// GameState struct
 struct GameState {
-	std::string playerId;
-	int time; /// tick number
+    /// tick number
+	int time;
 	std::vector<Player> players;
 	Map map;
 };

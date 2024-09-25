@@ -5,6 +5,8 @@ enum class PacketType {
 	Unknown = 0,
 	Ping = 17,
 	Pong = 18,
+    ConnectionOkay = 19,
+    ConnectionRejected = 28,
 	GameStart = 49,
 	TankMovement = 73,
 	TankRotation = 74,

@@ -13,8 +13,8 @@ class Handler {
 
  private:
 	TileVariant ParseTileVariant(const nlohmann::json& tileJson);
-	std::string ResponseToString(const ResponseVariant& response);
-	void SendResponse(const ResponseVariant& response);
+	std::string ResponseToString(const ResponseVariant& response, std::string& id);
+	void SendResponse(const ResponseVariant& response, std::string& id);
     void UpdateTilesAndVisibility(GameState& gameState);
 
 	Agent *agentPtr;
