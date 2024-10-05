@@ -6,7 +6,7 @@
 
 class WebSocketClient {
  public:
-	WebSocketClient(std::string  host, std::string  port, std::string nickname, std::string  code, bool debugQuickJoin);
+	WebSocketClient(std::string  host, std::string  port, std::string nickname, std::string  code);
 	~WebSocketClient();
 
 	std::future<bool> Connect();
@@ -21,13 +21,11 @@ class WebSocketClient {
 	void DoWrite();
 	void ProcessMessage(const std::string& message);
 	void RespondToPing();
-	void Reconnect();
 
 	std::string host;
 	std::string port;
 	std::string nickname;
 	std::string code;
-    bool debugQuickJoin;
 
 	boost::asio::io_context ioc;
 	boost::beast::websocket::stream<boost::asio::ip::tcp::socket> ws;

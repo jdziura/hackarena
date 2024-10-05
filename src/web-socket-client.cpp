@@ -3,8 +3,8 @@
 #include <utility>
 #include "packet.h"
 
-WebSocketClient::WebSocketClient(std::string  host, std::string  port, std::string nickname, std::string  code, bool debugQuickJoin)
-	: host(std::move(host)), port(std::move(port)), nickname(std::move(nickname)), code(std::move(code)), debugQuickJoin(debugQuickJoin),
+WebSocketClient::WebSocketClient(std::string  host, std::string  port, std::string nickname, std::string  code)
+	: host(std::move(host)), port(std::move(port)), nickname(std::move(nickname)), code(std::move(code)),
 	  ws(ioc), handler(&agent, &messagesToSend, &mtx, &cv) {}
 
 WebSocketClient::~WebSocketClient()
@@ -42,10 +42,6 @@ std::string WebSocketClient::ConstructUrl()
 
 	if (!code.empty()) {
 		url += "&joinCode=" + code;
-	}
-
-	if (debugQuickJoin) {
-		url += "&quickJoin=true";
 	}
 
     url+= "&playerType=hackatonBot";
