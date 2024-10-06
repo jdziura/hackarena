@@ -44,7 +44,7 @@ std::string WebSocketClient::ConstructUrl()
 		url += "&joinCode=" + code;
 	}
 
-    url+= "&playerType=hackatonBot";
+    url+= "&playerType=hackathonBot";
 
 	return url;
 }
