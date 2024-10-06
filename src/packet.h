@@ -14,7 +14,8 @@ enum class PacketType {
 	GameState = 58,
 	LobbyData = 41,
 	Ready = 102,
-	GameEnded = 59
+	GameEnded = 59,
+    ResponsePass = 79
 };
 
 struct Packet {

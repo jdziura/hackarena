@@ -101,9 +101,7 @@ std::string Handler::ResponseToString(const ResponseVariant& response, std::stri
 		  jsonResponse["type"] = PacketType::TankShoot;
 		  jsonResponse["payload"]["gameStateId"] = id;
 	  } else if constexpr (std::is_same_v<T, Wait>) {
-		  jsonResponse["type"] = PacketType::TankRotation;
-		  jsonResponse["payload"]["tankRotation"] = nullptr; // Null for tankRotation
-		  jsonResponse["payload"]["turretRotation"] = nullptr; // Null for turretRotation
+		  jsonResponse["type"] = PacketType::ResponsePass;
           jsonResponse["payload"]["gameStateId"] = id;
 	  }
 	}, response);
