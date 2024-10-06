@@ -12,4 +12,5 @@ class Agent {
 	void Init(LobbyData lobbyData);
 	ResponseVariant NextMove(GameState gameState);
 	void OnGameEnded(EndGameLobby endGameLobby);
+    void OnWarningReceived(WarningType warningType, std::optional<std::string>& message);
 };

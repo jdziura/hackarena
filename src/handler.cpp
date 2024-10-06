@@ -335,4 +335,8 @@ void Handler::HandleLobbyData(nlohmann::json payload) {
 }
 
 Handler::Handler(Agent *agentPtr, std::queue<std::string> *messagesToSendPtr, std::mutex *mtxPtr,std::condition_variable *cvPtr)
-: agentPtr(agentPtr), messagesToSendPtr(messagesToSendPtr), mtxPtr(mtxPtr), cvPtr(cvPtr) {};
+: agentPtr(agentPtr), messagesToSendPtr(messagesToSendPtr), mtxPtr(mtxPtr), cvPtr(cvPtr) {}
+
+void Handler::OnWarningReceived(WarningType warningType, std::optional<std::string> message) {
+    agentPtr->OnWarningReceived(warningType, message);
+}

@@ -159,3 +159,10 @@ struct Shoot {};
 struct Wait {};
 
 using ResponseVariant = std::variant<Rotate, Move, Shoot, Wait>;
+
+enum class WarningType {
+    CustomWarning,
+    PlayerAlreadyMadeActionWarning,
+    ActionIgnoredDueToDeadWarning,
+    SlowResponseWarning,
+};

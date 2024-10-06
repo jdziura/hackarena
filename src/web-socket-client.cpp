@@ -29,8 +29,6 @@ void WebSocketClient::Stop()
 	#elif defined(__linux__)
 		// Linux-specific code
 		pthread_cancel(workThread.native_handle());
-	#elif defined(__APPLE__)
-		// macOS-specific code
 	#else
 		#error "Unsupported platform"
 	#endif
@@ -173,51 +171,73 @@ void WebSocketClient::DoWrite()
 	}
 }
 
-void WebSocketClient::ProcessMessage(const std::string& message)
-{
-	try {
-		// Parse JSON message
-		auto jsonMessage = nlohmann::json::parse(message);
+void WebSocketClient::ProcessMessage(const std::string &message) {
+    try {
+        // Parse JSON message
+        auto jsonMessage = nlohmann::json::parse(message);
 
-		// Deserialize Packet
-		Packet packet;
-		packet.packetType = static_cast<PacketType>(jsonMessage.at("type").get<uint64_t>());
+        // Deserialize Packet
+        Packet packet;
+        packet.packetType = static_cast<PacketType>(jsonMessage.at("type").get<uint64_t>());
         if (jsonMessage.contains("payload")) packet.payload = jsonMessage.at("payload");
 
-		// Process based on PacketType
-		switch (packet.packetType) {
-		case PacketType::Ping:
-			RespondToPing();
-			break;
-		case PacketType::Pong:
-			break;
-		case PacketType::GameStart:
-			break;
-		case PacketType::GameState:
-			handler.HandleGameState(packet.payload);
-			break;
-		case PacketType::LobbyData:
-			handler.HandleLobbyData(packet.payload);
-			break;
-		case PacketType::Ready:
-			break;
-		case PacketType::GameEnded:
-			handler.HandleGameEnded(packet.payload);
-            Stop();
-			break;
-        case PacketType::ConnectionOkay:
-            break;
-        case PacketType::ConnectionRejected:
-            std::cerr << "Connection Rejected: " << packet.payload["reason"].get<std::string>() << std::endl << std::flush;
-            Stop();
-            break;
-		default:
-			std::cerr << "Unknown packet type: " << message << std::endl << std::flush;
-			break;
-		}
-	} catch (const std::exception& e) {
-		std::cerr << "Error processing message: " << e.what() << std::endl << std::flush;
-	}
+        // Process based on PacketType
+        switch (packet.packetType) {
+            case PacketType::Ping:
+                RespondToPing();
+                break;
+            case PacketType::Pong:
+                break;
+            case PacketType::GameStart:
+                break;
+            case PacketType::GameState:
+                handler.HandleGameState(packet.payload);
+                break;
+            case PacketType::LobbyData:
+                handler.HandleLobbyData(packet.payload);
+                break;
+            case PacketType::GameEnded:
+                handler.HandleGameEnded(packet.payload);
+                Stop();
+                break;
+            case PacketType::ConnectionAccepted:
+                break;
+            case PacketType::ConnectionRejected:
+                std::cerr << "Connection Rejected: " << packet.payload["reason"].get<std::string>() << std::endl
+                          << std::flush;
+                Stop();
+                break;
+            case PacketType::InvalidPacketTypeError:
+                std::cerr << "Error: Invalid packet type received." << std::endl << std::flush;
+                break;
+            case PacketType::InvalidPacketUsageError:
+                std::cerr << "Error: Invalid usage of packet received." << std::endl << std::flush;
+                break;
+            case PacketType::CustomWarning: {
+                // Custom warnings may have a payload (message)
+                std::optional<std::string> temp;
+                if (packet.payload.contains("message")) {
+                    temp = packet.payload["message"];
+                }
+                handler.OnWarningReceived(WarningType::CustomWarning, temp);
+                break;
+            }
+            case PacketType::PlayerAlreadyMadeActionWarning:
+                handler.OnWarningReceived(WarningType::PlayerAlreadyMadeActionWarning, std::nullopt);
+                break;
+            case PacketType::ActionIgnoredDueToDeadWarning:
+                handler.OnWarningReceived(WarningType::ActionIgnoredDueToDeadWarning, std::nullopt);
+                break;
+            case PacketType::SlowResponseWarning:
+                handler.OnWarningReceived(WarningType::SlowResponseWarning, std::nullopt);
+                break;
+            default:
+                std::cerr << "Unknown packet type: " << message << std::endl << std::flush;
+                break;
+        }
+    } catch (const std::exception &e) {
+        std::cerr << "Error processing message: " << e.what() << std::endl << std::flush;
+    }
 }
 
 void WebSocketClient::RespondToPing()

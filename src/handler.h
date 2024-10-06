@@ -3,6 +3,7 @@
 #include "pch.h"
 #include "agent/agent.h"
 #include "processed-packets.h"
+#include "packet.h"
 
 class Handler {
  public:
@@ -10,6 +11,7 @@ class Handler {
 	void HandleLobbyData(nlohmann::json payload);
 	void HandleGameState(nlohmann::json payload);
 	void HandleGameEnded(nlohmann::json payload);
+    void OnWarningReceived(WarningType warningType, std::optional<std::string> message);
 
  private:
 	TileVariant ParseTileVariant(const nlohmann::json& tileJson);
