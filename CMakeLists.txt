@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.18)
 
+include(C:/vcpkg/scripts/buildsystems/vcpkg.cmake)
+
 # Project Name
 project(HackArena2024H2_Cxx)
 
