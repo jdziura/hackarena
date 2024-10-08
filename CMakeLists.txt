@@ -1,9 +1,20 @@
 cmake_minimum_required(VERSION 3.18)
 
-include(C:/vcpkg/scripts/buildsystems/vcpkg.cmake)
-
 # Project Name
 project(HackArena2024H2_Cxx)
+
+if(UNIX)
+    if(NOT DEFINED VCPKG_TARGET_TRIPLET)
+        set(VCPKG_TARGET_TRIPLET "x64-linux" CACHE STRING "Vcpkg target triplet")
+    endif()
+    if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+        set(CMAKE_TOOLCHAIN_FILE "/home/bombini/.vcpkg-clion/vcpkg/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
+    endif()
+elseif(WIN32)
+    if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+        set(CMAKE_TOOLCHAIN_FILE "C:/vcpkg/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
+    endif()
+endif()
 
 # Set C++ Standard
 set(CMAKE_CXX_STANDARD 20)
