@@ -182,7 +182,9 @@ You can run this client in two different ways: locally using CLion (recommended)
 
 ### 1. Running Locally
 
-Install Vcpkg preferably on C:\
+Have Cmake installed or install it from [here](https://cmake.org/download/)
+
+Install Vcpkg preferably on `C:\` but you can install it anywhere
 ```sh
    git clone https://github.com/microsoft/vcpkg.git
    ```
@@ -190,6 +192,9 @@ then run bootstrap-vcpkg.bat on windows or .sh on linux
 ```sh
    cd vcpkg; .\bootstrap-vcpkg.bat
    ```
+
+Modify line 11 or 15 in `CMakeLists.txt` depending on vcpkg location
+
 Clone repo in chosen IDE
 
 Preferably add x64-Release profile if it does not exist
