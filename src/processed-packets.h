@@ -137,7 +137,8 @@ struct GameState {
 
 enum class RotationDirection {
 	left = 0,
-	right = 1
+	right = 1,
+    none = 2,
 };
 
 enum class MoveDirection {
