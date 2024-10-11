@@ -41,10 +41,17 @@ struct Turret {
 	std::optional<int> ticksToRegenBullet;
 };
 
+enum class Direction {
+    up = 0,
+    right = 1,
+    down = 2,
+    left = 3
+};
+
 /// TankPayload struct
 struct Tank {
 	std::string ownerId;
-	int direction;
+    Direction direction;
 	Turret turret;
     /// Not present in enemies
 	std::optional<int> health;
@@ -52,18 +59,11 @@ struct Tank {
     char zoneName; // '?' or 63 for no zone
 };
 
-enum class BulletDirection {
-    up = 0,
-    right = 1,
-    down = 2,
-    left = 3
-};
-
 /// BulletPayload struct
 struct Bullet {
 	int id;
 	double speed;
-    BulletDirection direction;
+    Direction direction;
     bool isVisible;
     char zoneName; // '?' or 63 for no zone
 };

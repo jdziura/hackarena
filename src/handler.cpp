@@ -21,7 +21,7 @@ TileVariant Handler::ParseTileVariant(const nlohmann::json& tileJson) {
 		if (!tileJson["payload"].contains("direction") || tileJson["payload"]["direction"].is_null()) {
 			throw std::runtime_error("Missing or null direction in tank payload.");
 		}
-		tank.direction = tileJson["payload"]["direction"].get<int>();
+		tank.direction = Direction{tileJson["payload"]["direction"].get<int>()};
 
 		// Parse Turret (assuming it is mandatory in Tank)
 		if (!tileJson["payload"].contains("turret") || tileJson["payload"]["turret"].is_null()) {
@@ -73,7 +73,7 @@ TileVariant Handler::ParseTileVariant(const nlohmann::json& tileJson) {
 		if (!tileJson["payload"].contains("direction") || tileJson["payload"]["direction"].is_null()) {
 			throw std::runtime_error("Missing or null direction in bullet payload.");
 		}
-		bullet.direction = tileJson["payload"]["direction"].get<BulletDirection>();
+		bullet.direction = tileJson["payload"]["direction"].get<Direction>();
 
 		return bullet;
 	}
