@@ -116,7 +116,6 @@ std::string Handler::ResponseToString(const ResponseVariant& response, std::stri
 // Example of sending the response over WebSocket
 void Handler::SendResponse(const ResponseVariant& response, std::string& id) {
 	std::string responseString = ResponseToString(response, id);
-    std::cout << "response: " << responseString << std::endl << std::flush;
 	// Send the response over the WebSocket
 	{
 		std::lock_guard<std::mutex> lock(*mtxPtr);
@@ -288,7 +287,6 @@ void Handler::HandleGameState(nlohmann::json payload) {
 	ResponseVariant response = agentPtr->NextMove(gameState);
 	auto end = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double, std::milli> duration = end - start;
-    std::cout << "time taken: " << duration << std::endl << std::flush;
 
 	if(duration.count() < agentPtr->skipResponse) SendResponse(response, id);
 }
