@@ -90,12 +90,12 @@ std::string Handler::ResponseToString(const ResponseVariant& response, std::stri
 	  using T = std::decay_t<decltype(resp)>;
 	  if constexpr (std::is_same_v<T, Rotate>) {
 		  jsonResponse["type"] = PacketType::TankRotation;
-          if (static_cast<int>(resp.tankRotation) == 3){
+          if (static_cast<int>(resp.tankRotation) == 2){
               jsonResponse["payload"]["tankRotation"] = nullptr;
           } else jsonResponse["payload"]["tankRotation"] = static_cast<int>(resp.tankRotation);
-          if (static_cast<int>(resp.turretRotation) == 3){
+          if (static_cast<int>(resp.turretRotation) == 2){
               jsonResponse["payload"]["turretRotation"] = nullptr;
-          } jsonResponse["payload"]["turretRotation"] = static_cast<int>(resp.turretRotation);
+          } else jsonResponse["payload"]["turretRotation"] = static_cast<int>(resp.turretRotation);
           jsonResponse["payload"]["gameStateId"] = id;
 	  } else if constexpr (std::is_same_v<T, Move>) {
 		  jsonResponse["type"] = PacketType::TankMovement;
@@ -116,7 +116,7 @@ std::string Handler::ResponseToString(const ResponseVariant& response, std::stri
 // Example of sending the response over WebSocket
 void Handler::SendResponse(const ResponseVariant& response, std::string& id) {
 	std::string responseString = ResponseToString(response, id);
-
+    std::cout << "response: " << responseString << std::endl << std::flush;
 	// Send the response over the WebSocket
 	{
 		std::lock_guard<std::mutex> lock(*mtxPtr);
@@ -288,6 +288,7 @@ void Handler::HandleGameState(nlohmann::json payload) {
 	ResponseVariant response = agentPtr->NextMove(gameState);
 	auto end = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double, std::milli> duration = end - start;
+    std::cout << "time taken: " << duration << std::endl << std::flush;
 
 	if(duration.count() < agentPtr->skipResponse) SendResponse(response, id);
 }
