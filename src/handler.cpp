@@ -63,12 +63,7 @@ TileVariant Handler::ParseTileVariant(const nlohmann::json& tileJson) {
 		bullet.id = tileJson["payload"]["id"].get<int>();
 		bullet.speed = tileJson["payload"]["speed"].get<double>();
 		bullet.direction = tileJson["payload"]["direction"].get<Direction>();
-        std::string temp = tileJson["payload"]["type"].get<std::string>();
-        if(temp == "bullet") {
-            bullet.type = BulletType::bullet;
-        } else {
-            bullet.type = BulletType::doubleBullet;
-        }
+        bullet.type = tileJson["payload"]["type"].get<BulletType>();
 		return bullet;
 	}
     else if (type == "item") {
