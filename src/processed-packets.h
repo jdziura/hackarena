@@ -48,6 +48,14 @@ enum class Direction {
     left = 3
 };
 
+enum class SecondaryItemType {
+    unknown = 0,
+    Laser = 1,
+    DoubleBullet = 2,
+    Radar = 3,
+    Mine = 4,
+};
+
 /// TankPayload struct
 struct Tank {
 	std::string ownerId;
@@ -55,15 +63,41 @@ struct Tank {
 	Turret turret;
     /// Not present in enemies
 	std::optional<int> health;
+    std::optional<SecondaryItemType> secondaryItem;
     bool isVisible;
     char zoneName; // '?' or 63 for no zone
+};
+
+enum class BulletType {
+    bullet = 0,
+    doubleBullet = 1
 };
 
 /// BulletPayload struct
 struct Bullet {
 	int id;
+    BulletType type;
 	double speed;
     Direction direction;
+    bool isVisible;
+    char zoneName; // '?' or 63 for no zone
+};
+
+enum class LaserOrientation {
+    horizontal = 0,
+    vertical = 1
+};
+
+struct Laser {
+    int id;
+    LaserOrientation orientation;
+    bool isVisible;
+    char zoneName; // '?' or 63 for no zone
+};
+
+struct Mine {
+    int id;
+    std::optional<int> explosionRemainingTicks;
     bool isVisible;
     char zoneName; // '?' or 63 for no zone
 };
@@ -101,6 +135,7 @@ struct Player {
 	std::optional<int> score;
     /// Optional because it might be null
 	std::optional<int> ticksToRegen;
+    bool isUsingRadar;
 };
 
 struct Wall {
@@ -112,7 +147,21 @@ struct None {
     char zoneName; // '?' or 63 for no zone
 };
 
-using TileVariant = std::variant<Wall, Tank, Bullet, None>;
+enum class ItemType {
+    unknown = 0,
+    doubleBullet = 1,
+    laser = 2,
+    radar = 3,
+    mine = 4
+};
+
+struct Item {
+    ItemType type;
+    bool isVisible;
+    char zoneName; // '?' or 63 for no zone
+};
+
+using TileVariant = std::variant<Wall, Tank, Bullet, None, Mine, Laser, Item>;
 
 /// Map struct:
 /// Tiles are stored in a 2D array
@@ -155,11 +204,21 @@ struct Move {
 	MoveDirection direction;
 };
 
-struct Shoot {};
+enum class AbilityType {
+    fireBullet = 0,
+    fireDoubleBullet = 1,
+    useLaser = 2,
+    useRadar = 3,
+    dropMine = 4
+};
+
+struct AbilityUse {
+    AbilityType type;
+};
 
 struct Wait {};
 
-using ResponseVariant = std::variant<Rotate, Move, Shoot, Wait>;
+using ResponseVariant = std::variant<Rotate, Move, AbilityUse, Wait>;
 
 enum class WarningType {
     CustomWarning,

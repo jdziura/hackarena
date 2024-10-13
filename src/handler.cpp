@@ -46,37 +46,53 @@ TileVariant Handler::ParseTileVariant(const nlohmann::json& tileJson) {
 			tank.health = tileJson["payload"]["health"].get<int>();
 		}
 
+        // Optional secondaryItem field
+        if (tileJson["payload"].contains("secondaryItem") && !tileJson["payload"]["secondaryItem"].is_null()) {
+            tank.secondaryItem = tileJson["payload"]["secondaryItem"].get<SecondaryItemType>();
+        }
+
 		// Optional field for ticksToRegenBullet in Turret
 		if (turretJson.contains("ticksToRegenBullet") && !turretJson["ticksToRegenBullet"].is_null()) {
 			tank.turret.ticksToRegenBullet = turretJson["ticksToRegenBullet"].get<int>();
 		}
-
 		return tank;
 	}
 	else if (type == "bullet") {
 		// Parse Bullet
 		Bullet bullet;
-
-		// Check if id exists and is not null
-		if (!tileJson["payload"].contains("id") || tileJson["payload"]["id"].is_null()) {
-			throw std::runtime_error("Missing or null id in bullet payload.");
-		}
 		bullet.id = tileJson["payload"]["id"].get<int>();
-
-		// Check if speed exists and is not null
-		if (!tileJson["payload"].contains("speed") || tileJson["payload"]["speed"].is_null()) {
-			throw std::runtime_error("Missing or null speed in bullet payload.");
-		}
 		bullet.speed = tileJson["payload"]["speed"].get<double>();
-
-		// Check if direction exists and is not null
-		if (!tileJson["payload"].contains("direction") || tileJson["payload"]["direction"].is_null()) {
-			throw std::runtime_error("Missing or null direction in bullet payload.");
-		}
 		bullet.direction = tileJson["payload"]["direction"].get<Direction>();
-
+        std::string temp = tileJson["payload"]["type"].get<std::string>();
+        if(temp == "bullet") {
+            bullet.type = BulletType::bullet;
+        } else {
+            bullet.type = BulletType::doubleBullet;
+        }
 		return bullet;
 	}
+    else if (type == "item") {
+        // Parse Item
+        Item item;
+        item.type = tileJson["payload"]["type"].get<ItemType>();
+        return item;
+    }
+    else if (type == "laser") {
+        // Parse Item
+        Laser laser;
+        laser.id = tileJson["payload"]["id"].get<int>();
+        laser.orientation = tileJson["payload"]["orientation"].get<LaserOrientation>();
+        return laser;
+    }
+    else if (type == "mine") {
+        // Parse Item
+        Mine mine;
+        mine.id = tileJson["payload"]["id"].get<int>();
+        if (tileJson["payload"].contains("explosionRemainingTicks") && !tileJson["payload"]["explosionRemainingTicks"].is_null()) {
+            mine.explosionRemainingTicks = tileJson["payload"]["explosionRemainingTicks"].get<int>();
+        }
+        return mine;
+    }
 
 	// Default case, throw an error if type doesn't match
 	throw std::runtime_error("Unknown tile type: " + type);
@@ -101,8 +117,9 @@ std::string Handler::ResponseToString(const ResponseVariant& response, std::stri
 		  jsonResponse["type"] = PacketType::TankMovement;
 		  jsonResponse["payload"]["direction"] = static_cast<int>(resp.direction);
           jsonResponse["payload"]["gameStateId"] = id;
-	  } else if constexpr (std::is_same_v<T, Shoot>) {
-		  jsonResponse["type"] = PacketType::TankShoot;
+	  } else if constexpr (std::is_same_v<T, AbilityUse>) {
+		  jsonResponse["type"] = PacketType::AbilityUse;
+          jsonResponse["payload"]["abilityType"] = static_cast<int>(resp.type);;
 		  jsonResponse["payload"]["gameStateId"] = id;
 	  } else if constexpr (std::is_same_v<T, Wait>) {
 		  jsonResponse["type"] = PacketType::ResponsePass;
@@ -151,13 +168,19 @@ void Handler::UpdateTilesAndVisibility(GameState& gameState) {
             std::visit([zoneName](auto& tileObj) {
                 using T = std::decay_t<decltype(tileObj)>;
                 if constexpr (std::is_same_v<T, Wall>) {
-                    tileObj.zoneName = zoneName;  // Set zone name for Wall
+                    tileObj.zoneName = zoneName;
                 } else if constexpr (std::is_same_v<T, Tank>) {
-                    tileObj.zoneName = zoneName;  // Set zone name for Tank
+                    tileObj.zoneName = zoneName;
                 } else if constexpr (std::is_same_v<T, Bullet>) {
-                    tileObj.zoneName = zoneName;  // Set zone name for Bullet
+                    tileObj.zoneName = zoneName;
                 } else if constexpr (std::is_same_v<T, None>) {
-                    tileObj.zoneName = zoneName;  // Set zone name for None
+                    tileObj.zoneName = zoneName;
+                } else if constexpr (std::is_same_v<T, Mine>) {
+                    tileObj.zoneName = zoneName;
+                } else if constexpr (std::is_same_v<T, Laser>) {
+                    tileObj.zoneName = zoneName;
+                } else if constexpr (std::is_same_v<T, Item>) {
+                    tileObj.zoneName = zoneName;
                 }
             }, tile);
 
@@ -173,6 +196,12 @@ void Handler::UpdateTilesAndVisibility(GameState& gameState) {
                     } else if constexpr (std::is_same_v<T, Bullet>) {
                         tileObj.isVisible = (visibilityChar == '1');
                     } else if constexpr (std::is_same_v<T, None>) {
+                        tileObj.isVisible = (visibilityChar == '1');
+                    } else if constexpr (std::is_same_v<T, Mine>) {
+                        tileObj.isVisible = (visibilityChar == '1');
+                    } else if constexpr (std::is_same_v<T, Laser>) {
+                        tileObj.isVisible = (visibilityChar == '1');
+                    } else if constexpr (std::is_same_v<T, Item>) {
                         tileObj.isVisible = (visibilityChar == '1');
                     }
                 }, tile);
@@ -203,6 +232,9 @@ void Handler::HandleGameState(nlohmann::json payload) {
 		if (playerJson.contains("ticksToRegen") && !playerJson["ticksToRegen"].is_null()) {
 			player.ticksToRegen = playerJson["ticksToRegen"].get<int>();
 		}
+        if (playerJson.contains("isUsingRadar") && !playerJson["isUsingRadar"].is_null()) {
+            player.isUsingRadar = playerJson["isUsingRadar"].get<bool>();
+        }
 
 		gameState.players.push_back(player);
 	}

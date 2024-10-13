@@ -27,7 +27,7 @@ enum class PacketType {
     PlayerResponseActionGroup = 0x40,
     TankMovement = PlayerResponseActionGroup | HasPayload | 0x1,
     TankRotation = PlayerResponseActionGroup | HasPayload | 0x2,
-    TankShoot = PlayerResponseActionGroup | HasPayload | 0x3,
+    AbilityUse = PlayerResponseActionGroup | HasPayload | 0x3,
     ResponsePass = PlayerResponseActionGroup | HasPayload | 0x7,
 
     // Warning group (range: 0xE0 - 0xEF)

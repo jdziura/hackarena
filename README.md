@@ -29,20 +29,11 @@ final game state.
 - `Move`: This variant indicates a movement action, allowing the player to move the tank.
     - `direction` (`MoveDirection`): Specifies the direction of movement (forward or backward).
 
-- `Shoot`: This variant represents a shooting action, where the tank fires a bullet in the direction the turret is pointing.
+- `AbilityUse`: This variant represents an ability use action, where the tank can: shoot a bullet in the direction the turret is pointing, fire double bullet, use laser, use radar, drop mine behind the tank.
 
 - `Wait`: This variant indicates that the player chooses to wait, doing nothing during the current tick.
 
 `ResponseVariant` allows the game to handle different player actions in a flexible manner, responding to their decisions at each game tick.
-
-### Enum Definitions:
-- **`RotationDirection`**:
-    - `left`: Rotate the tank or turret counterclockwise.
-    - `right`: Rotate the tank or turret clockwise.
-
-- **`MoveDirection`**:
-    - `forward`: Move the tank forward.
-    - `backward`: Move the tank backward.
 
 ### Warning System
 
@@ -89,10 +80,10 @@ The `Map` struct represents the game world and is made up of tiles and zones:
 
 #### **ZoneStatus**
 This struct tracks the current state of a zone, such as whether it's being captured or contested:
-- **type**: A string representing the type of status (e.g., "beingCaptured", "captured", "contested").
+- **type**: A string representing the type of status (e.g., "beingCaptured", "captured", "beingContested", "beingRetaken", "neutral").
 - **remainingTicks** (optional): If the zone is being captured or retaken, this field shows how many ticks are left.
-- **playerId** (optional): The ID of the player capturing the zone.
-- **capturedById** (optional): The ID of the player who originally captured the zone.
+- **playerId** (optional): The ID of the player capturing or that captured the zone.
+- **capturedById** (optional): Used when zone is "beingContested" or "beingRetaken" instead of **playerId**.
 - **retakenById** (optional): The ID of the player retaking the zone, if applicable.
 
 ---
