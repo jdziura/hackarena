@@ -34,7 +34,7 @@ TileVariant Handler::ParseTileVariant(const nlohmann::json& tileJson) {
 		if (!turretJson.contains("direction") || turretJson["direction"].is_null()) {
 			throw std::runtime_error("Missing or null turret direction.");
 		}
-		tank.turret.direction = turretJson["direction"].get<int>();
+		tank.turret.direction = turretJson["direction"].get<Direction>();
 
 		// Check if bulletCount exists and is not null
 		if (turretJson.contains("bulletCount")) {

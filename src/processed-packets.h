@@ -32,20 +32,21 @@ struct LobbyData {
 	bool eagerBroadcast;
 };
 
-/// Turret struct for tanks
-struct Turret {
-	int direction;
-    /// Not present in enemies
-	std::optional<int> bulletCount;
-    /// Not present in enemies
-	std::optional<int> ticksToRegenBullet;
-};
 
 enum class Direction {
     up = 0,
     right = 1,
     down = 2,
     left = 3
+};
+
+/// Turret struct for tanks
+struct Turret {
+	Direction direction;
+    /// Not present in enemies
+	std::optional<int> bulletCount;
+    /// Not present in enemies
+	std::optional<int> ticksToRegenBullet;
 };
 
 enum class SecondaryItemType {
