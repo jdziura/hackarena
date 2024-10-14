@@ -16,7 +16,7 @@ int main(int argc, char** argv) {
             // Handle flags like --help (no value expected)
             if (arg == "--help") {
                 args["help"] = "";
-            } else if (i + 1 < argc && !argv[i + 1][0] == '-') {
+            } else if (i + 1 < argc && argv[i + 1][0] != '-') {
                 // Store key-value pairs for arguments that expect a value
                 args[arg.substr(2)] = argv[++i];
             }
