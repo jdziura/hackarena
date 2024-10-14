@@ -34,7 +34,7 @@ COPY . .
 RUN cmake . $CMAKE_ARGS -DCMAKE_EXE_LINKER_FLAGS="-static -pthread" && make
 
 # Stage 2: Minimal Runtime Image
-FROM debian:bullseye-slim
+FROM gcr.io/distroless/base-debian10
 
 # Copy the statically linked binary from the build stage
 COPY --from=builder /usr/src/app/HackArena2024H2_Cxx /app/HackArena2024H2_Cxx
