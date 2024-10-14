@@ -5,8 +5,8 @@ int main(int argc, char** argv) {
 	// Default values
 	std::string host = "localhost";
 	std::string port = "5000";
-	std::string nickname = "empty";
-	std::string code = "";
+	std::string nickname;
+	std::string code;
 
 	// Parse command line arguments into a map
 	std::unordered_map<std::string, std::string> args;
@@ -29,9 +29,10 @@ int main(int argc, char** argv) {
 	if (args.count("nickname")) nickname = args["nickname"];
 	if (args.count("code")) code = args["code"];
 
-    if (args.count("help")){
+    if (args.count("help") || nickname.empty()){
         std::cout << "--nickname Nickname of the agent that will be displayed in the game.\nThis must be a unique identifier for the agent in the game environment.\nNicknames that are already in use or not unique will cause conflicts.\n--host The IP address or domain name of the server to connect to.\nThe agent will attempt to establish a connection to the specified host.\nIf not provided, it defaults to 'localhost'.\n--port The port on which the server is listening.\nThis specifies the port number that the server is using for communication.\nIf not provided, it defaults to port 5000.\n--code Optional access code required to join the server.\nIf the server enforces an access code for connections, it must be supplied here.\nIf no code is required, this can be left empty (default is an empty string)."
                 << std::endl << std::flush;
+        return EXIT_SUCCESS;
     };
 
 	// Print the values
@@ -47,10 +48,10 @@ int main(int argc, char** argv) {
 	WebSocketClient client(host, port, nickname, code);
 
 	// Connect to the WebSocket server asynchronously
-	auto connect_future = client.Connect();
+	auto connectFuture = client.Connect();
 
 	// Wait for the connection to be established
-	if (!connect_future.get()) {
+	if (!connectFuture.get()) {
 		std::cerr << "Failed to Connect to the WebSocket server." << std::endl << std::flush;
 		client.Stop();
 		return EXIT_FAILURE;
