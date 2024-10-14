@@ -38,6 +38,7 @@ FROM gcr.io/distroless/base-debian10
 
 # Copy the statically linked binary from the build stage
 COPY --from=builder /usr/src/app/HackArena2024H2_Cxx /app/HackArena2024H2_Cxx
+COPY --from=builder /usr/src/app/data /app/data
 
 # Set non-root user (if applicable)
 USER 1000
