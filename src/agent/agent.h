@@ -9,8 +9,8 @@ class Agent {
     int skipResponse = 99;
 
 	Agent();
-	void Init(LobbyData lobbyData);
-	ResponseVariant NextMove(GameState gameState);
-	void OnGameEnded(EndGameLobby endGameLobby);
+	void Init(const LobbyData& lobbyData);
+	ResponseVariant NextMove(const GameState& gameState);
+	void OnGameEnded(const EndGameLobby& endGameLobby);
     void OnWarningReceived(WarningType warningType, std::optional<std::string>& message);
 };
