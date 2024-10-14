@@ -1,42 +1,46 @@
-# Use the official Debian image as a base
-FROM debian:bullseye-slim
+# Stage 1: Build the C++ Application
+FROM debian:bullseye-slim as builder
 
-# Set environment variables
+# Set environment variables for non-interactive installs and vcpkg setup
 ENV DEBIAN_FRONTEND=noninteractive
 ENV VCPKG_ROOT=/vcpkg
 ENV CMAKE_ARGS="-DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
 
-# Install necessary packages
+# Install necessary build packages
 RUN apt-get update && apt-get install -y \
     build-essential \
     cmake \
     git \
     curl \
     unzip \
-	zip \
-	pkg-config \
+    zip \
+    pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
-# Clone vcpkg
-RUN git clone https://github.com/microsoft/vcpkg.git $VCPKG_ROOT \
-    && cd $VCPKG_ROOT \
-    && git checkout master \
-    && ./bootstrap-vcpkg.sh
-
-# Copy only the vcpkg.json first to leverage Docker caching for dependencies
-COPY vcpkg.json /app/vcpkg.json
+# Clone and Set Up vcpkg for dependency management
+RUN git clone https://github.com/microsoft/vcpkg.git $VCPKG_ROOT && cd $VCPKG_ROOT && ./bootstrap-vcpkg.sh
 
 # Set the working directory
-WORKDIR /app
+WORKDIR /usr/src/app
 
-# Install dependencies using vcpkg
+# Copy vcpkg.json for caching
+COPY vcpkg.json ./vcpkg.json
+
+# Install dependencies via vcpkg
 RUN $VCPKG_ROOT/vcpkg install --triplet x64-linux
 
-# Now copy the rest of the project files
-COPY . /app
+# Copy the application source code and build the application
+COPY . .
+RUN cmake . $CMAKE_ARGS -DCMAKE_EXE_LINKER_FLAGS="-static -pthread" && make
 
-# Build the application
-RUN cmake . $CMAKE_ARGS -DCMAKE_EXE_LINKER_FLAGS="-pthread" && make
+# Stage 2: Minimal Runtime Image
+FROM debian:bullseye-slim
 
-# Specify the command to run your application (replace `your_executable` with the actual name)
-ENTRYPOINT ["./HackArena2024H2_Cxx"]
+# Copy the statically linked binary from the build stage
+COPY --from=builder /usr/src/app/HackArena2024H2_Cxx /app/HackArena2024H2_Cxx
+
+# Set non-root user (if applicable)
+USER 1000
+
+# Set the entry point to run the application
+ENTRYPOINT ["/app/HackArena2024H2_Cxx"]
