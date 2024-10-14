@@ -1,8 +1,5 @@
 cmake_minimum_required(VERSION 3.18)
 
-# Project Name
-project(HackArena2024H2_Cxx)
-
 if(UNIX)
     if(NOT DEFINED VCPKG_TARGET_TRIPLET)
         set(VCPKG_TARGET_TRIPLET "x64-linux" CACHE STRING "Vcpkg target triplet")
@@ -15,6 +12,9 @@ elseif(WIN32)
         set(CMAKE_TOOLCHAIN_FILE "C:/vcpkg/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
     endif()
 endif()
+
+# Project Name
+project(HackArena2024H2_Cxx)
 
 # Set C++ Standard
 set(CMAKE_CXX_STANDARD 20)
