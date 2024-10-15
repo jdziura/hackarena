@@ -14,7 +14,6 @@ class Handler {
     void OnWarningReceived(WarningType warningType, std::optional<std::string> message);
 
  private:
-	TileVariant ParseTileVariant(const nlohmann::json& tileJson);
 	std::string ResponseToString(const ResponseVariant& response, std::string& id);
 	void SendResponse(const ResponseVariant& response, std::string& id);
     void UpdateTilesAndVisibility(GameState& gameState);

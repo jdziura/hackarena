@@ -65,8 +65,6 @@ struct Tank {
     /// Not present in enemies
 	std::optional<int> health;
     std::optional<SecondaryItemType> secondaryItem;
-    bool isVisible;
-    char zoneName; // '?' or 63 for no zone
 };
 
 enum class BulletType {
@@ -92,15 +90,11 @@ enum class LaserOrientation {
 struct Laser {
     int id;
     LaserOrientation orientation;
-    bool isVisible;
-    char zoneName; // '?' or 63 for no zone
 };
 
 struct Mine {
     int id;
     std::optional<int> explosionRemainingTicks;
-    bool isVisible;
-    char zoneName; // '?' or 63 for no zone
 };
 
 /// ZoneStatus struct to represent various zone states
@@ -139,14 +133,9 @@ struct Player {
     bool isUsingRadar;
 };
 
-struct Wall {
-    char zoneName; // '?' or 63 for no zone
-};
+struct Wall {};
 
-struct None {
-    bool isVisible;
-    char zoneName; // '?' or 63 for no zone
-};
+struct None {};
 
 enum class ItemType {
     unknown = 0,
@@ -158,11 +147,15 @@ enum class ItemType {
 
 struct Item {
     ItemType type;
-    bool isVisible;
-    char zoneName; // '?' or 63 for no zone
 };
 
 using TileVariant = std::variant<Wall, Tank, Bullet, None, Mine, Laser, Item>;
+
+struct Tile {
+    std::vector<TileVariant> objects;
+    bool isVisible;
+    char zoneName; // '?' or 63 for no zone
+};
 
 /// Map struct:
 /// Tiles are stored in a 2D array
@@ -170,8 +163,8 @@ using TileVariant = std::variant<Wall, Tank, Bullet, None, Mine, Laser, Item>;
 /// Outer arrays represent rows of the map
 /// Item with index [0][0] represents top-left corner of the map
 struct Map {
-	/// A 3D vector to hold variants of tile objects
-	std::vector<std::vector<TileVariant>> tiles;
+	/// A 2D vector to hold variants of tile objects
+	std::vector<std::vector<Tile>> tiles;
 	std::vector<Zone> zones;
     /// 2D array of chars ('0' or '1') same as tiles
 	std::vector<std::vector<char>> visibility;

@@ -1,98 +1,6 @@
 #include "handler.h"
 #include "packet.h"
 
-TileVariant Handler::ParseTileVariant(const nlohmann::json& tileJson) {
-	std::string type = tileJson["type"].get<std::string>();
-
-	if (type == "wall") {
-		return Wall();  // Wall has no additional properties
-	}
-	else if (type == "tank") {
-		// Parse Tank
-		Tank tank;
-
-		// Check if ownerId exists and is not null
-		if (!tileJson["payload"].contains("ownerId") || tileJson["payload"]["ownerId"].is_null()) {
-			throw std::runtime_error("Missing or null ownerId in tank payload.");
-		}
-		tank.ownerId = tileJson["payload"]["ownerId"].get<std::string>();
-
-		// Check if direction exists and is not null
-		if (!tileJson["payload"].contains("direction") || tileJson["payload"]["direction"].is_null()) {
-			throw std::runtime_error("Missing or null direction in tank payload.");
-		}
-		tank.direction = Direction{tileJson["payload"]["direction"].get<int>()};
-
-		// Parse Turret (assuming it is mandatory in Tank)
-		if (!tileJson["payload"].contains("turret") || tileJson["payload"]["turret"].is_null()) {
-			throw std::runtime_error("Missing turret in tank payload.");
-		}
-
-		const auto& turretJson = tileJson["payload"]["turret"];
-
-		// Check if turret direction exists and is not null
-		if (!turretJson.contains("direction") || turretJson["direction"].is_null()) {
-			throw std::runtime_error("Missing or null turret direction.");
-		}
-		tank.turret.direction = turretJson["direction"].get<Direction>();
-
-		// Check if bulletCount exists and is not null
-		if (turretJson.contains("bulletCount")) {
-			tank.turret.bulletCount = turretJson["bulletCount"].get<int>();
-		}
-
-		// Optional health field
-		if (tileJson["payload"].contains("health") && !tileJson["payload"]["health"].is_null()) {
-			tank.health = tileJson["payload"]["health"].get<int>();
-		}
-
-        // Optional secondaryItem field
-        if (tileJson["payload"].contains("secondaryItem") && !tileJson["payload"]["secondaryItem"].is_null()) {
-            tank.secondaryItem = tileJson["payload"]["secondaryItem"].get<SecondaryItemType>();
-        }
-
-		// Optional field for ticksToRegenBullet in Turret
-		if (turretJson.contains("ticksToRegenBullet") && !turretJson["ticksToRegenBullet"].is_null()) {
-			tank.turret.ticksToRegenBullet = turretJson["ticksToRegenBullet"].get<int>();
-		}
-		return tank;
-	}
-	else if (type == "bullet") {
-		// Parse Bullet
-		Bullet bullet;
-		bullet.id = tileJson["payload"]["id"].get<int>();
-		bullet.speed = tileJson["payload"]["speed"].get<double>();
-		bullet.direction = tileJson["payload"]["direction"].get<Direction>();
-        bullet.type = tileJson["payload"]["type"].get<BulletType>();
-		return bullet;
-	}
-    else if (type == "item") {
-        // Parse Item
-        Item item;
-        item.type = tileJson["payload"]["type"].get<ItemType>();
-        return item;
-    }
-    else if (type == "laser") {
-        // Parse Item
-        Laser laser;
-        laser.id = tileJson["payload"]["id"].get<int>();
-        laser.orientation = tileJson["payload"]["orientation"].get<LaserOrientation>();
-        return laser;
-    }
-    else if (type == "mine") {
-        // Parse Item
-        Mine mine;
-        mine.id = tileJson["payload"]["id"].get<int>();
-        if (tileJson["payload"].contains("explosionRemainingTicks") && !tileJson["payload"]["explosionRemainingTicks"].is_null()) {
-            mine.explosionRemainingTicks = tileJson["payload"]["explosionRemainingTicks"].get<int>();
-        }
-        return mine;
-    }
-
-	// Default case, throw an error if type doesn't match
-	throw std::runtime_error("Unknown tile type: " + type);
-}
-
 // Function to convert ResponseVariant to string
 std::string Handler::ResponseToString(const ResponseVariant& response, std::string& id) {
 	nlohmann::ordered_json jsonResponse;
@@ -158,48 +66,12 @@ void Handler::UpdateTilesAndVisibility(GameState& gameState) {
             // Determine the zone name based on the zone map
             auto zoneIt = zoneMap.find({col, row});  // Notice the order: (x, y) corresponds to (col, row)
             char zoneName = zoneIt != zoneMap.end() ? zoneIt->second : '?'; // Default to '?' if no zone
-
-            // Update tile based on its type and zone name
-            std::visit([zoneName](auto& tileObj) {
-                using T = std::decay_t<decltype(tileObj)>;
-                if constexpr (std::is_same_v<T, Wall>) {
-                    tileObj.zoneName = zoneName;
-                } else if constexpr (std::is_same_v<T, Tank>) {
-                    tileObj.zoneName = zoneName;
-                } else if constexpr (std::is_same_v<T, Bullet>) {
-                    tileObj.zoneName = zoneName;
-                } else if constexpr (std::is_same_v<T, None>) {
-                    tileObj.zoneName = zoneName;
-                } else if constexpr (std::is_same_v<T, Mine>) {
-                    tileObj.zoneName = zoneName;
-                } else if constexpr (std::is_same_v<T, Laser>) {
-                    tileObj.zoneName = zoneName;
-                } else if constexpr (std::is_same_v<T, Item>) {
-                    tileObj.zoneName = zoneName;
-                }
-            }, tile);
+            tile.zoneName = zoneName;
 
             // Update visibility based on the provided visibility data
             if (row < visibility.size() && col < visibility[row].size()) {
                 char visibilityChar = visibility[row][col];
-
-                // Update visibility based on the visibility character
-                std::visit([visibilityChar](auto& tileObj) {
-                    using T = std::decay_t<decltype(tileObj)>;
-                    if constexpr (std::is_same_v<T, Tank>) {
-                        tileObj.isVisible = (visibilityChar == '1');
-                    } else if constexpr (std::is_same_v<T, Bullet>) {
-                        tileObj.isVisible = (visibilityChar == '1');
-                    } else if constexpr (std::is_same_v<T, None>) {
-                        tileObj.isVisible = (visibilityChar == '1');
-                    } else if constexpr (std::is_same_v<T, Mine>) {
-                        tileObj.isVisible = (visibilityChar == '1');
-                    } else if constexpr (std::is_same_v<T, Laser>) {
-                        tileObj.isVisible = (visibilityChar == '1');
-                    } else if constexpr (std::is_same_v<T, Item>) {
-                        tileObj.isVisible = (visibilityChar == '1');
-                    }
-                }, tile);
+                tile.isVisible = (visibilityChar == '1');
             }
         }
     }
@@ -286,7 +158,7 @@ void Handler::HandleGameState(nlohmann::json payload) {
     size_t numRows2 = layer.size();
     size_t numCols2 = layer[0].size(); // Assuming at least one row exists
 
-    gameState.map.tiles.resize(numCols2, std::vector<TileVariant>(numRows2));
+    gameState.map.tiles.resize(numCols2, std::vector<Tile>(numRows2));
 
     // Loop through each row in the tiles layer
     for (size_t i = 0; i < numRows2; ++i) {
@@ -294,16 +166,107 @@ void Handler::HandleGameState(nlohmann::json payload) {
 
         // Loop through each tile in the row
         for (size_t j = 0; j < rowJson.size(); ++j) {
-            const auto& tileJson = rowJson[j];
+            Tile tile;
+            for (const auto& tileJson : rowJson[j]){
 
-            if (tileJson.empty()) {
-                // Handle empty tiles appropriately
-                gameState.map.tiles[j][i] = None{false, 63};
-                continue;
+                if (tileJson.empty()) {
+                    // Handle empty tiles appropriately
+                    gameState.map.tiles[j][i] = Tile{};
+                    continue;
+                }
+                TileVariant nextObject;
+                std::string type = tileJson["type"].get<std::string>();
+
+                if (type == "wall") {
+                    nextObject = Wall();  // Wall has no additional properties
+                }
+                else if (type == "tank") {
+                    // Parse Tank
+                    Tank tank;
+
+                    // Check if ownerId exists and is not null
+                    if (!tileJson["payload"].contains("ownerId") || tileJson["payload"]["ownerId"].is_null()) {
+                        throw std::runtime_error("Missing or null ownerId in tank payload.");
+                    }
+                    tank.ownerId = tileJson["payload"]["ownerId"].get<std::string>();
+
+                    // Check if direction exists and is not null
+                    if (!tileJson["payload"].contains("direction") || tileJson["payload"]["direction"].is_null()) {
+                        throw std::runtime_error("Missing or null direction in tank payload.");
+                    }
+                    tank.direction = Direction{tileJson["payload"]["direction"].get<int>()};
+
+                    // Parse Turret (assuming it is mandatory in Tank)
+                    if (!tileJson["payload"].contains("turret") || tileJson["payload"]["turret"].is_null()) {
+                        throw std::runtime_error("Missing turret in tank payload.");
+                    }
+
+                    const auto& turretJson = tileJson["payload"]["turret"];
+
+                    // Check if turret direction exists and is not null
+                    if (!turretJson.contains("direction") || turretJson["direction"].is_null()) {
+                        throw std::runtime_error("Missing or null turret direction.");
+                    }
+                    tank.turret.direction = turretJson["direction"].get<Direction>();
+
+                    // Check if bulletCount exists and is not null
+                    if (turretJson.contains("bulletCount")) {
+                        tank.turret.bulletCount = turretJson["bulletCount"].get<int>();
+                    }
+
+                    // Optional health field
+                    if (tileJson["payload"].contains("health") && !tileJson["payload"]["health"].is_null()) {
+                        tank.health = tileJson["payload"]["health"].get<int>();
+                    }
+
+                    // Optional secondaryItem field
+                    if (tileJson["payload"].contains("secondaryItem") && !tileJson["payload"]["secondaryItem"].is_null()) {
+                        tank.secondaryItem = tileJson["payload"]["secondaryItem"].get<SecondaryItemType>();
+                    }
+
+                    // Optional field for ticksToRegenBullet in Turret
+                    if (turretJson.contains("ticksToRegenBullet") && !turretJson["ticksToRegenBullet"].is_null()) {
+                        tank.turret.ticksToRegenBullet = turretJson["ticksToRegenBullet"].get<int>();
+                    }
+                    nextObject = tank;
+                }
+                else if (type == "bullet") {
+                    // Parse Bullet
+                    Bullet bullet;
+                    bullet.id = tileJson["payload"]["id"].get<int>();
+                    bullet.speed = tileJson["payload"]["speed"].get<double>();
+                    bullet.direction = tileJson["payload"]["direction"].get<Direction>();
+                    bullet.type = tileJson["payload"]["type"].get<BulletType>();
+                    nextObject = bullet;
+                }
+                else if (type == "item") {
+                    // Parse Item
+                    Item item;
+                    item.type = tileJson["payload"]["type"].get<ItemType>();
+                    nextObject = item;
+                }
+                else if (type == "laser") {
+                    // Parse Item
+                    Laser laser;
+                    laser.id = tileJson["payload"]["id"].get<int>();
+                    laser.orientation = tileJson["payload"]["orientation"].get<LaserOrientation>();
+                    nextObject = laser;
+                }
+                else if (type == "mine") {
+                    // Parse Item
+                    Mine mine;
+                    mine.id = tileJson["payload"]["id"].get<int>();
+                    if (tileJson["payload"].contains("explosionRemainingTicks") && !tileJson["payload"]["explosionRemainingTicks"].is_null()) {
+                        mine.explosionRemainingTicks = tileJson["payload"]["explosionRemainingTicks"].get<int>();
+                    }
+                    nextObject = mine;
+                }
+                tile.objects.push_back(nextObject);
             }
 
+            if(tile.objects.size()>1)std::cout << tile.objects.size() <<std::endl;
             // Use the ParseTileVariant function to parse each tile
-            gameState.map.tiles[j][i] = ParseTileVariant(tileJson[0]); // Access the first item in the tile array
+            gameState.map.tiles[j][i] = tile; // Access the first item in the tile array
         }
     }
 
