@@ -19,9 +19,11 @@ enum class PacketType {
 
     // GameState group (range: 0x30 - 0x3F)
     GameStateGroup = 0x30,
-    GameStart = GameStateGroup | 0x1,
+    GameStarted = GameStateGroup | 0x1,
     GameState = GameStateGroup | HasPayload | 0x2,
     GameEnded = GameStateGroup | HasPayload | 0x3,
+    GameStarting = GameStateGroup | 0x4,
+    ReadyToReceiveGameState = GameStateGroup | 0x5,
 
     // Player response group (range: 0x40 - 0x4F)
     PlayerResponseActionGroup = 0x40,

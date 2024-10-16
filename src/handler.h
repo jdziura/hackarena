@@ -11,6 +11,7 @@ class Handler {
 	void HandleLobbyData(nlohmann::json payload);
 	void HandleGameState(nlohmann::json payload);
 	void HandleGameEnded(nlohmann::json payload);
+    void HandleGameStarting();
     void OnWarningReceived(WarningType warningType, std::optional<std::string> message);
 
  private:

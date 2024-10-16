@@ -333,3 +333,23 @@ Handler::Handler(Agent *agentPtr, std::queue<std::string> *messagesToSendPtr, st
 void Handler::OnWarningReceived(WarningType warningType, std::optional<std::string> message) {
     agentPtr->OnWarningReceived(warningType, message);
 }
+
+void Handler::HandleGameStarting() {
+    agentPtr->OnGameStarting();
+    try {
+        // Serialize Packet to JSON
+        nlohmann::json jsonResponse;
+        jsonResponse["type"] = static_cast<uint64_t>(PacketType::ReadyToReceiveGameState);
+
+        std::string responseString = jsonResponse.dump();
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+        // Send the response over the WebSocket
+        std::lock_guard<std::mutex> lock(*mtxPtr);
+        messagesToSendPtr->push(responseString);
+        cvPtr->notify_one();
+    } catch (const std::exception& e) {
+        std::cerr << "Error responding to GameStarting: " << e.what() << std::endl << std::flush;
+    }
+}

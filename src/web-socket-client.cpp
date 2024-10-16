@@ -188,7 +188,8 @@ void WebSocketClient::ProcessMessage(const std::string &message) {
                 break;
             case PacketType::Pong:
                 break;
-            case PacketType::GameStart:
+            case PacketType::GameStarted:
+                std::cout << "GameStarted!" << std::endl << std::flush;
                 break;
             case PacketType::GameState:
                 handler.HandleGameState(packet.payload);
@@ -199,6 +200,9 @@ void WebSocketClient::ProcessMessage(const std::string &message) {
             case PacketType::GameEnded:
                 handler.HandleGameEnded(packet.payload);
                 Stop();
+                break;
+            case PacketType::GameStarting:
+                handler.HandleGameStarting();
                 break;
             case PacketType::ConnectionAccepted:
                 break;

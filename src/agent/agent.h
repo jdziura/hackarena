@@ -13,4 +13,5 @@ class Agent {
 	ResponseVariant NextMove(const GameState& gameState);
 	void OnGameEnded(const EndGameLobby& endGameLobby);
     void OnWarningReceived(WarningType warningType, std::optional<std::string>& message);
+    void OnGameStarting();
 };
