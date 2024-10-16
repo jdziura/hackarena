@@ -343,8 +343,6 @@ void Handler::HandleGameStarting() {
 
         std::string responseString = jsonResponse.dump();
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
         // Send the response over the WebSocket
         std::lock_guard<std::mutex> lock(*mtxPtr);
         messagesToSendPtr->push(responseString);
