@@ -217,6 +217,9 @@ void WebSocketClient::ProcessMessage(const std::string &message) {
             case PacketType::InvalidPacketUsageError:
                 std::cerr << "Error: Invalid usage of packet received." << std::endl << std::flush;
                 break;
+            case PacketType::InvalidPayloadError:
+                std::cerr << "Error: Invalid payload of packet received." << std::endl << std::flush;
+                break;
             case PacketType::CustomWarning: {
                 // Custom warnings may have a payload (message)
                 std::optional<std::string> temp;

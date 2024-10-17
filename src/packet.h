@@ -15,7 +15,7 @@ enum class PacketType {
     // Lobby group (range: 0x20 - 0x2F)
     LobbyGroup = 0x20,
     LobbyData = LobbyGroup | HasPayload | 0x1,
-    LobbyDeleted = LobbyGroup | 0x2,
+    LobbyDataRequest = LobbyGroup | 0x2,
 
     // GameState group (range: 0x30 - 0x3F)
     GameStateGroup = 0x30,
@@ -42,7 +42,8 @@ enum class PacketType {
     // Error group (range: 0xF0 - 0xFF)
     ErrorGroup = 0xF0,
     InvalidPacketTypeError = ErrorGroup | 0x1,
-    InvalidPacketUsageError = ErrorGroup | 0x2
+    InvalidPacketUsageError = ErrorGroup | 0x2,
+    InvalidPayloadError = ErrorGroup | 0x3,
 };
 
 
