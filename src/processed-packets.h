@@ -202,8 +202,8 @@ struct Move {
 
 enum class AbilityType {
     fireBullet = 0,
-    fireDoubleBullet = 1,
-    useLaser = 2,
+    fireDoubleBullet = 2,
+    useLaser = 1,
     useRadar = 3,
     dropMine = 4
 };
