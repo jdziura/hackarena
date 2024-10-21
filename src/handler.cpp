@@ -264,7 +264,6 @@ void Handler::HandleGameState(nlohmann::json payload) {
                 tile.objects.push_back(nextObject);
             }
 
-            if(tile.objects.size()>1)std::cout << tile.objects.size() <<std::endl;
             // Use the ParseTileVariant function to parse each tile
             gameState.map.tiles[j][i] = tile; // Access the first item in the tile array
         }
