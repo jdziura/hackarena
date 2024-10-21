@@ -317,6 +317,11 @@ void Handler::HandleLobbyData(nlohmann::json payload) {
 	// Extract server settings from the nested object
 	const auto& serverSettings = payload.at("serverSettings");
 
+
+    if (serverSettings.contains("matchName") && !serverSettings["matchName"].is_null()) {
+        lobbyData.matchName = serverSettings.at("matchName").get<std::string>();
+    }
+    lobbyData.sandboxMode = serverSettings.at("sandboxMode").get<bool>();
 	lobbyData.gridDimension = serverSettings.at("gridDimension").get<int>();
 	lobbyData.numberOfPlayers = serverSettings.at("numberOfPlayers").get<int>();
 	lobbyData.seed = serverSettings.at("seed").get<int>();

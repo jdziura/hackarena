@@ -17,12 +17,15 @@ enum class PacketType {
     LobbyData = LobbyGroup | HasPayload | 0x1,
     LobbyDataRequest = LobbyGroup | 0x2,
 
-    // GameState group (range: 0x30 - 0x3F)
+    GameStatusGroup = 0x50,
+    GameNotStarted = GameStatusGroup | 0x1,
+    GameStarting = GameStatusGroup | 0x2,
+    GameStarted = GameStatusGroup | 0x3,
+    GameInProgress = GameStatusGroup | 0x4,
+    GameEnded = GameStatusGroup | HasPayload | 0x5,
+
     GameStateGroup = 0x30,
-    GameStarted = GameStateGroup | 0x1,
     GameState = GameStateGroup | HasPayload | 0x2,
-    GameEnded = GameStateGroup | HasPayload | 0x3,
-    GameStarting = GameStateGroup | 0x4,
     ReadyToReceiveGameState = GameStateGroup | 0x5,
 
     // Player response group (range: 0x40 - 0x4F)

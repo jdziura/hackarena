@@ -24,6 +24,8 @@ struct EndGameLobby {
 struct LobbyData {
 	std::string myId;
 	std::vector<LobbyPlayer> players;
+    bool sandboxMode;
+    std::optional<std::string> matchName;
 	int gridDimension;
 	int numberOfPlayers;
 	int seed;
