@@ -331,7 +331,7 @@ void Handler::HandleLobbyData(nlohmann::json payload) {
 	// Initialize the agent with the parsed lobby data
 	agentPtr->Init(lobbyData);
 
-    if (lobbyData.sandboxMode) HandleSandbox();
+    if (lobbyData.sandboxMode) HandleGameStarting();
 }
 
 Handler::Handler(Agent *agentPtr, std::queue<std::string> *messagesToSendPtr, std::mutex *mtxPtr,std::condition_variable *cvPtr)
@@ -357,23 +357,4 @@ void Handler::HandleGameStarting() {
     } catch (const std::exception& e) {
         std::cerr << "Error responding to GameStarting: " << e.what() << std::endl << std::flush;
     }
-}
-
-void Handler::HandleSandbox() {
-    agentPtr->OnGameStarting();
-    try {
-        // Serialize Packet to JSON
-        nlohmann::json jsonResponse;
-        jsonResponse["type"] = static_cast<uint64_t>(PacketType::LobbyDataRequest);
-
-        std::string responseString = jsonResponse.dump();
-
-        // Send the response over the WebSocket
-        std::lock_guard<std::mutex> lock(*mtxPtr);
-        messagesToSendPtr->push(responseString);
-        cvPtr->notify_one();
-    } catch (const std::exception& e) {
-        std::cerr << "Error requesting LobbyDataRequest: " << e.what() << std::endl << std::flush;
-    }
-    HandleGameStarting();
 }

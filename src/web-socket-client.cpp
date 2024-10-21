@@ -205,6 +205,7 @@ void WebSocketClient::ProcessMessage(const std::string &message) {
                 handler.HandleGameStarting();
                 break;
             case PacketType::ConnectionAccepted:
+                SendLobbyRequest();
                 break;
             case PacketType::ConnectionRejected:
                 std::cerr << "Connection Rejected: " << packet.payload["reason"].get<std::string>() << std::endl
@@ -263,4 +264,22 @@ void WebSocketClient::RespondToPing()
 	} catch (const std::exception& e) {
 		std::cerr << "Error responding to Ping: " << e.what() << std::endl << std::flush;
 	}
+}
+
+void WebSocketClient::SendLobbyRequest()
+{
+    try {
+        // Serialize Packet to JSON
+        nlohmann::json jsonResponse;
+        jsonResponse["type"] = static_cast<uint64_t>(PacketType::LobbyDataRequest);
+
+        std::string responseString = jsonResponse.dump();
+
+        // Send the response over the WebSocket
+        std::lock_guard<std::mutex> lock(mtx);
+        messagesToSend.push(responseString);
+        cv.notify_one();
+    } catch (const std::exception& e) {
+        std::cerr << "Error sending lobby data request: " << e.what() << std::endl << std::flush;
+    }
 }

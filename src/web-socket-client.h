@@ -21,6 +21,7 @@ class WebSocketClient {
 	void DoWrite();
 	void ProcessMessage(const std::string& message);
 	void RespondToPing();
+    void SendLobbyRequest();
 
 	std::string host;
 	std::string port;
