@@ -18,6 +18,7 @@ class Handler {
 	std::string ResponseToString(const ResponseVariant& response, std::string& id);
 	void SendResponse(const ResponseVariant& response, std::string& id);
     void UpdateTilesAndVisibility(GameState& gameState);
+    void HandleSandbox();
 
 	Agent *agentPtr;
 	std::queue<std::string> *messagesToSendPtr;
