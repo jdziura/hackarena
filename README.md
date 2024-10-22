@@ -49,25 +49,22 @@ The game map is represented by several structs that define its layout, tiles, zo
 
 #### **Map**
 The `Map` struct represents the game world and is made up of tiles and zones:
-- **tiles**: A 2D vector of `TileVariant`, where each tile can be one of the following:
-    - `Wall`: Represents an indestructible barrier.
-        - `zoneName`: The name of the zone where the wall exists (or '?' if no zone).
-    - `Tank`: Represents a tank on the map.
-        - `ownerId`: The player owning the tank.
-        - `direction`: The direction the tank is facing.
-        - `turret`: A `Turret` struct containing the direction of the turret and, if available, bullet information.
-        - `health` (optional): Health points of the tank (absent for enemies).
-        - `isVisible`: Whether the tank is visible to the player.
-        - `zoneName`: The name of the zone where the tank is located (or '?' if no zone).
-    - `Bullet`: Represents a bullet on the map.
-        - `id`: A unique identifier for the bullet.
-        - `speed`: The speed at which the bullet moves.
-        - `direction`: The direction the bullet is traveling (up, down, left, right).
-        - `isVisible`: Whether the bullet is visible to the player.
-        - `zoneName`: The name of the zone where the bullet is located (or '?' if no zone).
-    - `None`: Represents an empty or non-interactable tile.
-        - `isVisible`: Whether the tile is visible to the player.
-        - `zoneName`: The name of the zone for this tile (or '?' if no zone).
+- **tiles**: A 2D vector of `Tile`, where each tile has:
+    - `isVisible`: Whether the tile is visible to the player.
+    - `zoneName`: The name of the zone for this tile (or '?' if no zone).
+    - `objects` : Objects in tile which can be 0 or more:
+        - `Wall`: Represents an indestructible barrier.
+        - `Tank`: Represents a tank on the map.
+            - `ownerId`: The player owning the tank.
+            - `direction`: The direction the tank is facing.
+            - `turret`: A `Turret` struct containing the direction of the turret and, if available, bullet information.
+            - `health` (optional): Health points of the tank (absent for enemies).
+        - `Bullet`: Represents a bullet on the map.
+            - `id`: A unique identifier for the bullet.
+            - `speed`: The speed at which the bullet moves.
+            - `direction`: The direction the bullet is traveling (up, down, left, right).
+        - `Item` : Represents an item on the map. They give abilities.
+          - `ItemType` : Type of item.
 
 - **zones**: A vector of `Zone` structs that represent specific regions on the map.
     - **Zone**
@@ -117,18 +114,12 @@ Similar to `LobbyPlayer`, but also includes the player's score:
 Holds information about all players at the end of the game:
 - **players**: A vector of `EndGamePlayer` structs, containing the end-game data for each player.
 
----
-
-### Tank, Bullet, and Turret Structs
-
 #### **Tank**
 Represents a tank in the game, including its owner and status:
 - **ownerId**: The ID of the player controlling the tank.
 - **direction**: The direction the tank is facing (e.g., up, down, left, right).
 - **turret**: A `Turret` struct representing the tank's turret.
 - **health** (optional): The health points of the tank (absent for enemy tanks).
-- **isVisible**: Whether the tank is visible to the player.
-- **zoneName**: The name of the zone where the tank is located.
 
 #### **Turret**
 Represents the turret on a tank:
@@ -139,10 +130,31 @@ Represents the turret on a tank:
 #### **Bullet**
 Represents a bullet fired by a tank:
 - **id**: A unique ID for the bullet.
+- **type**: Bullet or DoubleBullet
 - **speed**: The speed of the bullet.
 - **direction**: The direction the bullet is traveling.
-- **isVisible**: Whether the bullet is visible to the player.
-- **zoneName**: The name of the zone where the bullet is located.
+
+#### **Laser**
+Represents a laser shot by a tank:
+- **id**: A unique ID for the laser.
+- **orientation**: The orientation of the laser (horizontal or vertical).
+
+#### **Mine**
+Represents a mine placed by a tank:
+- **id**: A unique ID for the mine.
+- **explosionRemainingTicks** (optional): The number of ticks remaining until the explosion finishes.
+
+#### **Wall**
+Represents an indestructible barrier on the game map
+
+#### **Item**
+Represents an item on the map that grants abilities to the tank:
+- **type**: The type of item available.
+    - `unknown`: Only when the tank is on the item.
+    - `laser`: Grants the ability to shoot a laser.
+    - `doubleBullet`: Allows the player to shoot two bullets simultaneously.
+    - `radar`: Provides enhanced visibility of the surrounding area.
+    - `mine`: Allows the player to drop a mine behind the tank.
 
 ---
 

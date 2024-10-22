@@ -80,8 +80,6 @@ struct Bullet {
     BulletType type;
 	double speed;
     Direction direction;
-    bool isVisible;
-    char zoneName; // '?' or 63 for no zone
 };
 
 enum class LaserOrientation {
@@ -137,8 +135,6 @@ struct Player {
 
 struct Wall {};
 
-struct None {};
-
 enum class ItemType {
     unknown = 0,
     laser = 1,
@@ -151,7 +147,7 @@ struct Item {
     ItemType type;
 };
 
-using TileVariant = std::variant<Wall, Tank, Bullet, None, Mine, Laser, Item>;
+using TileVariant = std::variant<Wall, Tank, Bullet, Mine, Laser, Item>;
 
 struct Tile {
     std::vector<TileVariant> objects;
