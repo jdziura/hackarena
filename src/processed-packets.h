@@ -141,8 +141,8 @@ struct None {};
 
 enum class ItemType {
     unknown = 0,
-    doubleBullet = 1,
-    laser = 2,
+    laser = 1,
+	doubleBullet = 2,
     radar = 3,
     mine = 4
 };
@@ -202,8 +202,8 @@ struct Move {
 
 enum class AbilityType {
     fireBullet = 0,
-    fireDoubleBullet = 2,
     useLaser = 1,
+	fireDoubleBullet = 2,
     useRadar = 3,
     dropMine = 4
 };
