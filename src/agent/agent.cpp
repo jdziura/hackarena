@@ -1,5 +1,6 @@
 #include "agent.h"
 #include <utility>
+#include <random>
 
 void Agent::PrintMap(const std::vector<std::vector<Tile>>& tiles) {
     auto rows = tiles.size();
@@ -99,8 +100,39 @@ Agent::Agent() = default;
 void Agent::Init(const LobbyData& lobbyData) {myId = lobbyData.myId; skipResponse = lobbyData.broadcastInterval - 1;}
 ResponseVariant Agent::NextMove(const GameState& gameState) {
 	PrintMap(gameState.map.tiles);
-	return Wait{};
+
+    // Create a random device and generator
+    std::random_device rd;
+    std::mt19937 gen(rd());
+
+    // Define the distributions for each random selection
+    std::uniform_int_distribution<int> actionDist(0, 3); // 4 possible actions
+    std::uniform_int_distribution<int> directionDist(0, 1); // for MoveDirection and RotationDirection
+    std::uniform_int_distribution<int> abilityDist(0, 4); // 5 possible abilities
+
+    // Randomly choose the type of action
+    int action = actionDist(gen);
+
+    switch (action) {
+        case 0: { // Rotate
+            RotationDirection tankRot = static_cast<RotationDirection>(directionDist(gen));
+            RotationDirection turretRot = static_cast<RotationDirection>(directionDist(gen));
+            return Rotate{tankRot, turretRot};
+        }
+        case 1: { // Move
+            MoveDirection moveDir = static_cast<MoveDirection>(directionDist(gen));
+            return Move{moveDir};
+        }
+        case 2: { // AbilityUse
+            AbilityType ability = static_cast<AbilityType>(abilityDist(gen));
+            return AbilityUse{ability};
+        }
+        case 3: // Wait
+        default:
+            return Wait{};
+    }
 }
+
 void Agent::OnWarningReceived(WarningType warningType, std::optional<std::string> &message) {}
 void Agent::OnGameStarting() {}
 void Agent::OnGameEnded(const EndGameLobby& endGameLobby) {}
