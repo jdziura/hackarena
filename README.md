@@ -199,7 +199,7 @@ then run bootstrap-vcpkg.bat on windows or .sh on linux
    cd vcpkg; .\bootstrap-vcpkg.bat
    ```
 
-Modify line 11 or 15 in `CMakeLists.txt` depending on vcpkg location
+Modify line 8 or 12 in `CMakeLists.txt` depending on vcpkg location
 
 Clone repo in chosen IDE
 
