@@ -47,6 +47,9 @@ int main(int argc, char** argv) {
 	// Create the WebSocket client
 	WebSocketClient client(host, port, nickname, code);
 
+	std::signal(SIGINT, client.SignalHandler);
+	std::signal(SIGBREAK, client.SignalHandler);
+
 	// Connect to the WebSocket server asynchronously
 	auto connectFuture = client.Connect();
 

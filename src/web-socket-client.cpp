@@ -3,9 +3,14 @@
 #include <utility>
 #include "packet.h"
 
+boost::asio::io_context WebSocketClient::ioc;
+boost::asio::ip::tcp::socket WebSocketClient::socket(WebSocketClient::ioc);
+boost::beast::websocket::stream<boost::asio::ip::tcp::socket> WebSocketClient::ws(std::move(WebSocketClient::socket));
+std::thread WebSocketClient::workThread;
+
 WebSocketClient::WebSocketClient(std::string  host, std::string  port, std::string nickname, std::string  code)
 	: host(std::move(host)), port(std::move(port)), nickname(std::move(nickname)), code(std::move(code)),
-	  ws(ioc), handler(&agent, &messagesToSend, &mtx, &cv) {}
+	  handler(&agent, &messagesToSend, &mtx, &cv) {}
 
 WebSocketClient::~WebSocketClient()
 {
@@ -76,6 +81,19 @@ void WebSocketClient::DoConnect()
 		std::cerr << "Connection failed: " << e.what() << std::endl << std::flush;
         connectPromise.set_value(false);
 	}
+}
+
+void WebSocketClient::SignalHandler(int signal) {
+    std::cout << "\nCtrl+C was pressed! Signal (" << signal << ") received.\n";
+    try {
+		// Close the WebSocket connection
+		if (ws.is_open()) {
+			ws.close(boost::beast::websocket::close_code::normal);
+		}
+	} catch (const std::exception& e) {
+	}
+	exit(signal);
+	Stop();
 }
 
 void WebSocketClient::Run()

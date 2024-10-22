@@ -11,7 +11,8 @@ class WebSocketClient {
 
 	std::future<bool> Connect();
 	void Run();
-	void Stop();
+	static void SignalHandler(int signal);
+	static void Stop();
 	std::string ConstructUrl();
 
  private:
@@ -28,9 +29,10 @@ class WebSocketClient {
 	std::string nickname;
 	std::string code;
 
-	boost::asio::io_context ioc;
-	boost::beast::websocket::stream<boost::asio::ip::tcp::socket> ws;
-	std::thread workThread;
+	static boost::asio::io_context ioc;
+	static boost::asio::ip::tcp::socket socket;
+	static boost::beast::websocket::stream<boost::asio::ip::tcp::socket> ws;
+	static std::thread workThread;
 	Handler handler;
 	Agent agent;
 	std::promise<bool> connectPromise;
