@@ -232,7 +232,7 @@ void Handler::HandleGameState(nlohmann::json payload) {
                 }
                 else if (type == "bullet") {
                     // Parse Bullet
-                    Bullet bullet;
+                    Bullet bullet{};
                     bullet.id = tileJson["payload"]["id"].get<int>();
                     bullet.speed = tileJson["payload"]["speed"].get<double>();
                     bullet.direction = tileJson["payload"]["direction"].get<Direction>();
@@ -241,13 +241,13 @@ void Handler::HandleGameState(nlohmann::json payload) {
                 }
                 else if (type == "item") {
                     // Parse Item
-                    Item item;
+                    Item item{};
                     item.type = tileJson["payload"]["type"].get<ItemType>();
                     nextObject = item;
                 }
                 else if (type == "laser") {
                     // Parse Item
-                    Laser laser;
+                    Laser laser{};
                     laser.id = tileJson["payload"]["id"].get<int>();
                     laser.orientation = tileJson["payload"]["orientation"].get<LaserOrientation>();
                     nextObject = laser;

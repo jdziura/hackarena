@@ -15,10 +15,9 @@ class Handler {
     void OnWarningReceived(WarningType warningType, std::optional<std::string> message);
 
  private:
-	std::string ResponseToString(const ResponseVariant& response, std::string& id);
+	static std::string ResponseToString(const ResponseVariant& response, std::string& id);
 	void SendResponse(const ResponseVariant& response, std::string& id);
-    void UpdateTilesAndVisibility(GameState& gameState);
-    void HandleSandbox();
+    static void UpdateTilesAndVisibility(GameState& gameState);
 
 	Agent *agentPtr;
 	std::queue<std::string> *messagesToSendPtr;
