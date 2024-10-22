@@ -17,8 +17,6 @@ class Handler {
  private:
 	static std::string ResponseToString(const ResponseVariant& response, std::string& id);
 	void SendResponse(const ResponseVariant& response, std::string& id);
-    static void UpdateTilesAndVisibility(GameState& gameState);
-
 	Agent *agentPtr;
 	std::queue<std::string> *messagesToSendPtr;
 	std::mutex *mtxPtr;

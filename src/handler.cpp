@@ -44,39 +44,6 @@ void Handler::SendResponse(const ResponseVariant& response, std::string& id) {
 	cvPtr->notify_one();
 }
 
-void Handler::UpdateTilesAndVisibility(GameState& gameState) {
-    const auto& zones = gameState.map.zones;
-    const auto& visibility = gameState.map.visibility;
-
-    // Create a map for quick zone lookups
-    std::unordered_map<std::pair<size_t, size_t>, char, boost::hash<std::pair<size_t, size_t>>> zoneMap;
-    for (const auto& zone : zones) {
-        for (int x = zone.x; x < zone.x + zone.width; ++x) {
-            for (int y = zone.y; y < zone.y + zone.height; ++y) {
-                zoneMap[{x, y}] = zone.name;  // Store the zone name for quick access
-            }
-        }
-    }
-
-    // Iterate through each tile in the tiles layer
-    for (size_t row = 0; row < gameState.map.tiles.size(); ++row) {
-        for (size_t col = 0; col < gameState.map.tiles[row].size(); ++col) {
-            auto& tile = gameState.map.tiles[row][col];
-
-            // Determine the zone name based on the zone map
-            auto zoneIt = zoneMap.find({col, row});  // Notice the order: (x, y) corresponds to (col, row)
-            char zoneName = zoneIt != zoneMap.end() ? zoneIt->second : '?'; // Default to '?' if no zone
-            tile.zoneName = zoneName;
-
-            // Update visibility based on the provided visibility data
-            if (row < visibility.size() && col < visibility[row].size()) {
-                char visibilityChar = visibility[row][col];
-                tile.isVisible = (visibilityChar == '1');
-            }
-        }
-    }
-}
-
 void Handler::HandleGameState(nlohmann::json payload) {
 	GameState gameState;
 
@@ -269,9 +236,26 @@ void Handler::HandleGameState(nlohmann::json payload) {
         }
     }
 
-    UpdateTilesAndVisibility(gameState);
+    const auto& visibility = gameState.map.visibility;
+    for (size_t row = 0; row < gameState.map.tiles.size(); ++row) {
+        for (size_t col = 0; col < gameState.map.tiles[row].size(); ++col) {
 
-	// If agent move takes less than 5 seconds send response
+            // Initialize zoneName to '?' indicating no zone
+            gameState.map.tiles[row][col].zoneName = '?';
+
+            // Check each zone to see if the tile belongs to it
+            for (const auto& zone : gameState.map.zones) {
+                if (col >= zone.x && col < zone.x + zone.width &&
+                    row >= zone.y && row < zone.y + zone.height) {
+                    gameState.map.tiles[row][col].zoneName = zone.name;  // Assign the zone name
+                    break;  // Stop once a zone is found
+                }
+            }
+
+			gameState.map.tiles[row][col].isVisible = (visibility[row][col] == '1');
+        }
+    }
+
 	auto start = std::chrono::high_resolution_clock::now();
 	ResponseVariant response = agentPtr->NextMove(gameState);
 	auto end = std::chrono::high_resolution_clock::now();
