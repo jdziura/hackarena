@@ -78,7 +78,6 @@ void WebSocketClient::DoConnect()
 		// Start reading and writing threads
 		Run();
 	} catch (std::exception& e) {
-		std::cerr << "Connection failed: " << e.what() << std::endl << std::flush;
         connectPromise.set_value(false);
 	}
 }

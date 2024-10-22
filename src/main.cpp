@@ -56,7 +56,7 @@ int main(int argc, char** argv) {
 	// Wait for the connection to be established
 	if (!connectFuture.get()) {
 		std::cerr << "Failed to Connect to the WebSocket server." << std::endl << std::flush;
-		client.Stop();
+		WebSocketClient::Stop();
 		return EXIT_FAILURE;
 	}
 
