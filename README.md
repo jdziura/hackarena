@@ -162,10 +162,13 @@ The `GameState` struct captures the state of the game at a specific point in tim
 
 
 You can modify mentioned files and create more files in the `src/agent`
-directory. Do not modify any other files, as this may prevent us from running
+directory or `src/data` directory which will be copied to the same dir as compiled program on docker. 
+Modifying of any other files is not recommended, as this may prevent us from running
 your agent during the competition.
 
 Feel free to extend the functionality of the `GameState` struct or any other structs as you see fit. Just make sure it works :)
+
+You can also add any libraries you want. Check vcpkg and add them to `vcpkg.json`, if not from vcpkg you can configure them yourself.
 
 ## Running the Client
 
@@ -190,6 +193,11 @@ Clone repo in chosen IDE
 
 Preferably add x64-Release profile if it does not exist
 
+Build through IDE or by command
+```sh
+   <dir to cmake.exe here> --build <dir to cmake profile here> --target HackArena2024H2_Cxx -j 14
+   ```
+
 ### 2. Running in a Docker Container (Manual Setup)
 
 To run the client manually in a Docker container, ensure Docker is installed on
@@ -198,6 +206,9 @@ your system.
 Steps:
 
 1. Build the Docker image:
+    ```sh
+   cd <project dir here>
+   ```
    ```sh
    docker build -t client .
    ```
