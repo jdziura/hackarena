@@ -310,6 +310,7 @@ void Handler::HandleLobbyData(nlohmann::json payload) {
 	lobbyData.seed = serverSettings.at("seed").get<int>();
 	lobbyData.broadcastInterval = serverSettings.at("broadcastInterval").get<int>();
 	lobbyData.eagerBroadcast = serverSettings.at("eagerBroadcast").get<bool>();
+	lobbyData.version = serverSettings.at("version").get<std::string>();
 
 	// Initialize the agent with the parsed lobby data
 	agentPtr->Init(lobbyData);

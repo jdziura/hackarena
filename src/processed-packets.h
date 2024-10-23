@@ -32,6 +32,7 @@ struct LobbyData {
     /// how many milliseconds in tick
 	int broadcastInterval;
 	bool eagerBroadcast;
+	std::string version;
 };
 
 
