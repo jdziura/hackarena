@@ -2,7 +2,7 @@
 
 #include "pch.h"
 #include "handler.h"
-#include "agent/agent.h"
+#include "bot/bot.h"
 
 class WebSocketClient {
  public:
@@ -34,7 +34,7 @@ class WebSocketClient {
 	static boost::beast::websocket::stream<boost::asio::ip::tcp::socket> ws;
 	static std::thread workThread;
 	Handler handler;
-	Agent agent;
+	Bot bot;
 	std::promise<bool> connectPromise;
 
 	std::queue<std::string> messagesToSend;

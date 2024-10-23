@@ -1,8 +1,8 @@
-#include "agent.h"
+#include "bot.h"
 #include <utility>
 #include <random>
 
-void Agent::PrintMap(const std::vector<std::vector<Tile>>& tiles) {
+void Bot::PrintMap(const std::vector<std::vector<Tile>>& tiles) {
     auto rows = tiles.size();
     auto cols = tiles[0].size();
 
@@ -96,9 +96,9 @@ void Agent::PrintMap(const std::vector<std::vector<Tile>>& tiles) {
     std::cout << "---------------------------------------------------" << std::endl;
 }
 
-Agent::Agent() = default;
-void Agent::Init(const LobbyData& lobbyData) {myId = lobbyData.myId; skipResponse = lobbyData.broadcastInterval - 1;}
-ResponseVariant Agent::NextMove(const GameState& gameState) {
+Bot::Bot() = default;
+void Bot::Init(const LobbyData& lobbyData) { myId = lobbyData.myId; skipResponse = lobbyData.broadcastInterval - 1;}
+ResponseVariant Bot::NextMove(const GameState& gameState) {
 	PrintMap(gameState.map.tiles);
 
     // Create a random device and generator
@@ -133,6 +133,6 @@ ResponseVariant Agent::NextMove(const GameState& gameState) {
     }
 }
 
-void Agent::OnWarningReceived(WarningType warningType, std::optional<std::string> &message) {}
-void Agent::OnGameStarting() {}
-void Agent::OnGameEnded(const EndGameLobby& endGameLobby) {}
+void Bot::OnWarningReceived(WarningType warningType, std::optional<std::string> &message) {}
+void Bot::OnGameStarting() {}
+void Bot::OnGameEnded(const EndGameLobby& endGameLobby) {}

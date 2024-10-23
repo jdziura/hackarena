@@ -10,7 +10,7 @@ std::thread WebSocketClient::workThread;
 
 WebSocketClient::WebSocketClient(std::string  host, std::string  port, std::string nickname, std::string  code)
 	: host(std::move(host)), port(std::move(port)), nickname(std::move(nickname)), code(std::move(code)),
-	  handler(&agent, &messagesToSend, &mtx, &cv) {}
+	  handler(&bot, &messagesToSend, &mtx, &cv) {}
 
 WebSocketClient::~WebSocketClient()
 {

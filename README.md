@@ -1,22 +1,25 @@
-# C++ WebSocket Client for Hackathon 2024
+# MonoTanks API wrapper in C++ for HackArena 2.0
 
-This C++ based WebSocket client was developed for the Hackathon 2024, organized
-by WULS-SGGW. It serves as a framework for participants to create AI agents that
-can play the game.
+This API wrapper for MonoTanks game for the HackArena 2.0, organized by KN init.
+It is implemented as a WebSocket wrapper written in C++ programming language and
+can be used to create bots for the game.
 
 To fully test and run the game, you will also need the game server and GUI
-client, as the GUI provides a visual representation of gameplay. You can find
-more information about the server and GUI client in the following repository:
+wrapper, as the GUI provides a visual representation of gameplay. You can find
+more information about the server and GUI wrapper in the following repository:
 
-- [Server and GUI Client Repository](https://github.com/INIT-SGGW/HackArena2024H2-Game)
+- [Server and GUI client Repository](https://github.com/INIT-SGGW/HackArena2.0-MonoTanks)
+
+The guide to the game mechanics and tournament rules can be found on the:
+- [instruction page](https://github.com/INIT-SGGW/HackArena2.0-MonoTanks/blob/main/README.md).
 
 ## Development
 
-The agent logic you are going to implement is located in `src/agent/agent.cpp` and declarations in `src/agent/agent.h`
+The bot logic you are going to implement is located in `src/bot/bot.cpp` and declarations in `src/bot/bot.h`
 
-The `Agent` class implements methods, which define the agent's
-behavior. The constructor is called when the agent is created, and the
-`NextMove` function is called every game tick to determine the agent's next
+The `Bot` class implements methods, which define the bot's
+behavior. The constructor is called when the bot is created, and the
+`NextMove` function is called every game tick to determine the bot's next
 move. The `OnGameEnded` function is called when the game ends to provide the
 final game state.
 
@@ -173,18 +176,18 @@ The `GameState` struct captures the state of the game at a specific point in tim
 - **map**: The `Map` struct, representing the current state of the game world, including tiles, zones, and visibility.
 
 
-You can modify mentioned files and create more files in the `src/agent`
+You can modify mentioned files and create more files in the `src/bot`
 directory or `src/data` directory which will be copied to the same dir as compiled program on docker. 
 Modifying of any other files is not recommended, as this may prevent us from running
-your agent during the competition.
+your bot during the competition.
 
 Feel free to extend the functionality of the `GameState` struct or any other structs as you see fit. Just make sure it works :)
 
 You can also add any libraries you want. Check vcpkg and add them to `vcpkg.json`, if not from vcpkg you can configure them yourself.
 
-## Running the Client
+## Running the Bot
 
-You can run this client in two different ways: locally using CLion (recommended) or Visual Studio or using Docker.
+You can run this wrapper in two different ways: locally using CLion (recommended) or Visual Studio or using Docker.
 
 ### 1. Running Locally
 
@@ -212,7 +215,7 @@ Build through IDE or by command
 
 ### 2. Running in a Docker Container (Manual Setup)
 
-To run the client manually in a Docker container, ensure Docker is installed on
+To run the wrapper manually in a Docker container, ensure Docker is installed on
 your system.
 
 Steps:
@@ -222,11 +225,11 @@ Steps:
    cd <project dir here>
    ```
    ```sh
-   docker build -t client .
+   docker build -t wrapper .
    ```
 2. Run the Docker container:
    ```sh
-   docker run --rm client --nickname Cxx --host host.docker.internal
+   docker run --rm wrapper --nickname Cxx --host host.docker.internal
    ```
 
 If the server is running on your local machine, use the

@@ -1,5 +1,5 @@
 {
-  "name" : "hackarena2024h2-cxx",
+  "name" : "hackarena2-0-monotanks-cxx",
   "version-string" : "1.0.0",
   "builtin-baseline" : "efb544d5a580c51f270998d6522c08debb1b5769",
   "dependencies" : [ {

@@ -257,11 +257,11 @@ void Handler::HandleGameState(nlohmann::json payload) {
     }
 
 	auto start = std::chrono::high_resolution_clock::now();
-	ResponseVariant response = agentPtr->NextMove(gameState);
+	ResponseVariant response = botPtr->NextMove(gameState);
 	auto end = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double, std::milli> duration = end - start;
 
-	if(duration.count() < agentPtr->skipResponse) SendResponse(response, id);
+	if(duration.count() < botPtr->skipResponse) SendResponse(response, id);
 }
 
 void Handler::HandleGameEnded(nlohmann::json payload) {
@@ -278,7 +278,7 @@ void Handler::HandleGameEnded(nlohmann::json payload) {
         endGameLobby.players.push_back(lobbyPlayer);
     }
 
-    agentPtr->OnGameEnded(endGameLobby);
+    botPtr->OnGameEnded(endGameLobby);
 }
 
 void Handler::HandleLobbyData(nlohmann::json payload) {
@@ -312,21 +312,21 @@ void Handler::HandleLobbyData(nlohmann::json payload) {
 	lobbyData.eagerBroadcast = serverSettings.at("eagerBroadcast").get<bool>();
 	lobbyData.version = serverSettings.at("version").get<std::string>();
 
-	// Initialize the agent with the parsed lobby data
-	agentPtr->Init(lobbyData);
+	// Initialize the bot with the parsed lobby data
+	botPtr->Init(lobbyData);
 
     if (lobbyData.sandboxMode) HandleGameStarting();
 }
 
-Handler::Handler(Agent *agentPtr, std::queue<std::string> *messagesToSendPtr, std::mutex *mtxPtr,std::condition_variable *cvPtr)
-: agentPtr(agentPtr), messagesToSendPtr(messagesToSendPtr), mtxPtr(mtxPtr), cvPtr(cvPtr) {}
+Handler::Handler(Bot *botPtr, std::queue<std::string> *messagesToSendPtr, std::mutex *mtxPtr,std::condition_variable *cvPtr)
+: botPtr(botPtr), messagesToSendPtr(messagesToSendPtr), mtxPtr(mtxPtr), cvPtr(cvPtr) {}
 
 void Handler::OnWarningReceived(WarningType warningType, std::optional<std::string> message) {
-    agentPtr->OnWarningReceived(warningType, message);
+    botPtr->OnWarningReceived(warningType, message);
 }
 
 void Handler::HandleGameStarting() {
-    agentPtr->OnGameStarting();
+    botPtr->OnGameStarting();
     try {
         // Serialize Packet to JSON
         nlohmann::json jsonResponse;

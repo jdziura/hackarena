@@ -2,14 +2,14 @@
 
 #include "../processed-packets.h"
 
-class Agent {
+class Bot {
  public:
     /// DO NOT DELETE
     /// time in milliseconds after which the NextMove() answer is not sent to server, CAN BE CHANGED WHENEVER YOU WANT
     int skipResponse = 99;
 	std::string myId;
 
-	Agent();
+	Bot();
 	void Init(const LobbyData& lobbyData);
 	ResponseVariant NextMove(const GameState& gameState);
 	void OnGameEnded(const EndGameLobby& endGameLobby);
