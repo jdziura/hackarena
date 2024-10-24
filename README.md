@@ -210,7 +210,7 @@ Preferably add x64-Release profile if it does not exist
 
 Build through IDE or by command
 ```sh
-   <dir to cmake.exe here> --build <dir to cmake profile here> --target HackArena2024H2_Cxx -j 14
+   <dir to cmake.exe here> --build <dir to cmake profile here> --target HackArena2.0-MonoTanks-Cxx -j 14
    ```
 
 ### 2. Running in a Docker Container (Manual Setup)

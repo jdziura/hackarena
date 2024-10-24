@@ -48,7 +48,14 @@ int main(int argc, char** argv) {
 	WebSocketClient client(host, port, nickname, code);
 
 	std::signal(SIGINT, WebSocketClient::SignalHandler);
-	std::signal(SIGBREAK, WebSocketClient::SignalHandler);
+
+	#ifdef _WIN64
+		std::signal(SIGBREAK, WebSocketClient::SignalHandler);
+	#elif defined(__linux__)
+		std::signal(SIGQUIT, WebSocketClient::SignalHandler);
+	#else
+		#error "Unsupported platform"
+	#endif
 
 	// Connect to the WebSocket server asynchronously
 	auto connectFuture = client.Connect();

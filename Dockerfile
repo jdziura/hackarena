@@ -1,5 +1,5 @@
 # Stage 1: Build the C++ Application
-FROM debian:bullseye-slim as builder
+FROM debian:bullseye-slim AS builder
 
 # Set environment variables for non-interactive installs and vcpkg setup
 ENV DEBIAN_FRONTEND=noninteractive
@@ -37,11 +37,11 @@ RUN cmake . $CMAKE_ARGS -DCMAKE_EXE_LINKER_FLAGS="-static -pthread" && make
 FROM gcr.io/distroless/base-debian10
 
 # Copy the statically linked binary from the build stage
-COPY --from=builder /usr/src/app/HackArena2024H2_Cxx /app/HackArena2024H2_Cxx
+COPY --from=builder /usr/src/app/HackArena2.0-MonoTanks-Cxx /app/HackArena2.0-MonoTanks-Cxx
 COPY --from=builder /usr/src/app/data /app/data
 
 # Set non-root user (if applicable)
 USER 1000
 
 # Set the entry point to run the application
-ENTRYPOINT ["/app/HackArena2024H2_Cxx"]
+ENTRYPOINT ["/app/HackArena2.0-MonoTanks-Cxx"]
