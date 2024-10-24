@@ -264,3 +264,11 @@ You can also add any libraries you want. Check vcpkg and add them to `vcpkg.json
 You will need to submit a zip file containing the whole repository. Of course,
 please, delete the cmake-build directories and any other temporary files before
 submitting, so the file size is as small as possible.
+
+### Error about missing boost?
+
+Check `CMakeLists.txt` line 8 or 12
+
+or
+
+Add `-DCMAKE_TOOLCHAIN_FILE=<dir to vcpkg here>/vcpkg/scripts/buildsystems/vcpkg.cmake` to environment variables
