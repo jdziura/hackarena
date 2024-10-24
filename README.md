@@ -15,6 +15,14 @@ The guide to the game mechanics and tournament rules can be found on the:
 
 ## Development
 
+Clone this repo using git:
+```sh
+git clone https://github.com/INIT-SGGW/HackArena2.0-MonoTanks-Cxx.git
+```
+
+or download the [zip file](https://github.com/INIT-SGGW/HackArena2.0-MonoTanks-Cxx/archive/refs/heads/master.zip)
+and extract it.
+
 The bot logic you are going to implement is located in `src/bot/bot.cpp` and declarations in `src/bot/bot.h`
 
 The `Bot` class implements methods, which define the bot's
@@ -175,16 +183,6 @@ The `GameState` struct captures the state of the game at a specific point in tim
         - **ticksToRegen** (optional): The number of ticks until the player's next action can occur (e.g., reloading).
 - **map**: The `Map` struct, representing the current state of the game world, including tiles, zones, and visibility.
 
-
-You can modify mentioned files and create more files in the `src/bot`
-directory or `src/data` directory which will be copied to the same dir as compiled program on docker. 
-Modifying of any other files is not recommended, as this may prevent us from running
-your bot during the competition.
-
-Feel free to extend the functionality of the `GameState` struct or any other structs as you see fit. Just make sure it works :)
-
-You can also add any libraries you want. Check vcpkg and add them to `vcpkg.json`, if not from vcpkg you can configure them yourself.
-
 ## Running the Bot
 
 You can run this wrapper in two different ways: locally using CLion (recommended) or Visual Studio or using Docker.
@@ -235,3 +233,34 @@ Steps:
 If the server is running on your local machine, use the
 `--host host.docker.internal` flag to connect the Docker container to your local
 host.
+
+## FAQ
+
+### What can be modified?
+
+Anything! **Just make sure it works :)**
+
+You can modify mentioned files and create more files in the `src/bot`
+directory or `src/data` directory which will be copied to the same dir as compiled program on docker. 
+Modifying of any other files is not recommended, as this may prevent us from running
+your bot during the competition.
+
+Feel free to extend the functionality of the `GameState` struct or any other structs as you see fit.
+
+### Can we include static files?
+
+If you need to include static files that your program should access during
+testing or execution, place them in the `data` folder. This folder is copied
+into the Docker image and will be accessible to your application at runtime. For
+example, you could include configuration files, pre-trained models, or any other
+data your bot might need.
+
+### Can we add libraries?
+
+You can also add any libraries you want. Check vcpkg and add them to `vcpkg.json`, if not from vcpkg you can configure them yourself.
+
+### In what format we will need to submit our bot?
+
+You will need to submit a zip file containing the whole repository. Of course,
+please, delete the cmake-build directories and any other temporary files before
+submitting, so the file size is as small as possible.
