@@ -11,7 +11,7 @@ more information about the server and GUI wrapper in the following repository:
 - [Server and GUI client Repository](https://github.com/INIT-SGGW/HackArena2.0-MonoTanks)
 
 The guide to the game mechanics and tournament rules can be found on the:
-- [instruction page](https://hackarena.pl/Assets/Game/HackArena%202.0%20-%20instrukcja.pdf).
+- [Instruction Page](https://hackarena.pl/Assets/Game/HackArena%202.0%20-%20instrukcja.pdf)
 
 ## Development
 
