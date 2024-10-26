@@ -1,3 +1,5 @@
+# Example usage:
+# python3 run_tests.py -n 20 -b random_bot_v1 random_bot_v1 -r --ticks 500 --broadcast-interval 200 --grid-dimension 8
 import os
 import subprocess
 import argparse
