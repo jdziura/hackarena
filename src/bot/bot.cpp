@@ -97,10 +97,15 @@ void Bot::PrintMap(const std::vector<std::vector<Tile>>& tiles) {
 }
 
 Bot::Bot() = default;
-void Bot::Init(const LobbyData& lobbyData) { myId = lobbyData.myId; skipResponse = lobbyData.broadcastInterval - 1;}
-ResponseVariant Bot::NextMove(const GameState& gameState) {
-	PrintMap(gameState.map.tiles);
 
+void Bot::Init(const LobbyData& _lobbyData) { 
+    lobbyData = _lobbyData;
+    dim = lobbyData.gridDimension;
+    myId = lobbyData.myId;
+    skipResponse = lobbyData.broadcastInterval - 1;
+}
+
+ResponseVariant Bot::RandomMove(const GameState& gameState) {
     // Create a random device and generator
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -133,6 +138,94 @@ ResponseVariant Bot::NextMove(const GameState& gameState) {
     }
 }
 
+ResponseVariant Bot::NextMove(const GameState& gameState) {
+    clock_t start = clock();
+    std::cerr << " Round: " << gameState.time << std::endl;
+    PrintMap(gameState.map.tiles);
+
+    if (gameState.time == 1) {
+        onFirstNextMove(gameState);
+    }
+
+    auto isZone = [&](const OrientedPosition& oPos) {
+        return zoneName[oPos.pos.x][oPos.pos.y] != '?';
+    };
+
+    auto nxtMove = bfs(myPos, isZone);
+    
+    if (!nxtMove) {
+        std::cerr << " >>> Jajco, can't move to zone <<< " << std::endl;
+        return Wait{};
+    }
+
+    if (std::holds_alternative<MoveDirection>(*nxtMove)) {
+        if (std::get<MoveDirection>(*nxtMove) == MoveDirection::forward) {
+            std::cerr << " > move forward < " << std::endl;
+        } else {
+            std::cerr << " > move backward < " << std::endl;
+        }
+    } else {
+        if (std::get<RotationDirection>(*nxtMove) == RotationDirection::left) {
+            std::cerr << " > rotate left < " << std::endl;
+        } else {
+            std::cerr << " > rotate right < " << std::endl;
+        }
+    }
+
+    myPos = afterMove(myPos, *nxtMove);
+    std::cerr << " > myPos: " << myPos.pos.x << " " << myPos.pos.y << " " << static_cast<int>(myPos.dir) << std::endl;
+
+    if (std::holds_alternative<MoveDirection>(*nxtMove)) {
+        return Move{std::get<MoveDirection>(*nxtMove)};
+    } else {
+        return Rotate{std::get<RotationDirection>(*nxtMove), RotationDirection::none};
+    }
+}
+
 void Bot::OnWarningReceived(WarningType warningType, std::optional<std::string> &message) {}
 void Bot::OnGameStarting() {}
 void Bot::OnGameEnded(const EndGameLobby& endGameLobby) {}
+
+void Bot::initIsWall(const std::vector<std::vector<Tile>>& tiles) {
+    isWall = std::vector<std::vector<bool>>(dim, std::vector<bool>(dim, false));
+    for (int i = 0; i < dim; ++i) {
+        for (int j = 0; j < dim; ++j) {
+            isWall[i][j] = std::any_of(tiles[i][j].objects.begin(), tiles[i][j].objects.end(), [](const TileVariant& object) {
+                return std::holds_alternative<Wall>(object);
+            });
+        }
+    }
+}
+
+void Bot::initZoneName(const std::vector<std::vector<Tile>>& tiles) {
+    zoneName = std::vector<std::vector<char>>(dim, std::vector<char>(dim, '?'));
+    for (int i = 0; i < dim; ++i) {
+        for (int j = 0; j < dim; ++j) {
+            zoneName[i][j] = tiles[i][j].zoneName;
+            std::cerr << zoneName[i][j] << " ";
+        }
+        std::cerr << std::endl;
+    }
+}
+
+void Bot::initMyPos(const GameState& gameState) {
+    for (int i = 0; i < dim; i++) {
+        for (int j = 0; j < dim; j++) {
+            for (const TileVariant& object : gameState.map.tiles[i][j].objects) {
+                if (std::holds_alternative<Tank>(object)) {
+                    const Tank& tank = std::get<Tank>(object);
+                    if (tank.ownerId == myId) {
+                        myPos = OrientedPosition(Position(i, j), tank.direction);
+                        return;
+                    }
+                }
+            }
+        }
+    }
+}
+
+void Bot::onFirstNextMove(const GameState& gameState) {
+    initIsWall(gameState.map.tiles);
+    initZoneName(gameState.map.tiles);
+    initMyPos(gameState);
+}

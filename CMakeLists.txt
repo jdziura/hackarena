@@ -5,7 +5,7 @@ if(UNIX)
         set(VCPKG_TARGET_TRIPLET "x64-linux" CACHE STRING "Vcpkg target triplet")
     endif()
     if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
-        set(CMAKE_TOOLCHAIN_FILE "~/vcpkg/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
+        set(CMAKE_TOOLCHAIN_FILE "~/hackarena/vcpkg/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
     endif()
 elseif(WIN32)
     if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
@@ -18,6 +18,9 @@ project(HackArena2.0-MonoTanks-Cxx)
 
 # Set C++ Standard
 set(CMAKE_CXX_STANDARD 20)
+
+# Custom compiler flags
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -g -fsanitize=address,undefined")
 
 find_package(Boost REQUIRED COMPONENTS system beast asio)
 find_package(nlohmann_json REQUIRED)
@@ -33,6 +36,7 @@ add_executable(HackArena2.0-MonoTanks-Cxx src/main.cpp
         src/pch.h
         src/bot/bot.cpp
         src/bot/bot.h
+        src/bot/utils.h
         src/processed-packets.h
         src/handler.cpp
         src/handler.h)
