@@ -24,31 +24,33 @@ class Bot {
     /// END
 
     ResponseVariant RandomMove(const GameState& gameState);
-    ResponseVariant RandomRotateOrFire(const GameState& gameState);
+    ResponseVariant BeDrunkInsideZone(const GameState& gameState);
 
     LobbyData lobbyData;
     int dim;
     std::vector<std::vector<bool>> isWall;
     std::vector<std::vector<char>> zoneName;
-    std::vector<GameState> statesSnapshots;
+    // std::vector<GameState> statesSnapshots;
+    Tank myTank;
     OrientedPosition myPos;
     Direction myTurretDir;
-    Item heldItem = Item{ItemType::unknown};
+    int myBulletCount = 3;
+    SecondaryItemType heldItem = SecondaryItemType::unknown;
+
+    // strategies
+    std::optional<ResponseVariant> dropMineIfPossible(const GameState& gameState);
+    std::optional<ResponseVariant> shootIfSeeingEnemy(const GameState& gameState);
 
     void onFirstNextMove(const GameState& gameState);
     void initIsWall(const std::vector<std::vector<Tile>>& tiles);
     void initZoneName(const std::vector<std::vector<Tile>>& tiles);
-    void initMyPos(const GameState& gameState);
-    void initTurretDir(const GameState& gameState);
+    void initMyTank(const GameState& gameState);
+    void initMyTankHelper(const GameState& gameState);
 
-    bool canSeeEnemy(const GameState& gameState);
+    bool canSeeEnemy(const GameState& gameState) const;
 
-    bool canMoveForwardInsideZone(const OrientedPosition& pos);
-    bool canMoveBackwardInsideZone(const OrientedPosition& pos);
-
-    bool haveItem() {
-        return heldItem.type != ItemType::unknown;
-    }
+    bool canMoveForwardInsideZone(const OrientedPosition& pos) const;
+    bool canMoveBackwardInsideZone(const OrientedPosition& pos) const;
 
     template<class F>
     std::optional<MoveOrRotation> bfs(const OrientedPosition& start, F&& f) {
