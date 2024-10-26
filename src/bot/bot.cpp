@@ -140,46 +140,39 @@ ResponseVariant Bot::RandomMove(const GameState& gameState) {
 
 ResponseVariant Bot::NextMove(const GameState& gameState) {
     clock_t start = clock();
-    std::cerr << " Round: " << gameState.time << std::endl;
-    PrintMap(gameState.map.tiles);
+    // std::cerr << " Round: " << gameState.time << std::endl;
+    // PrintMap(gameState.map.tiles);
 
     if (gameState.time == 1) {
         onFirstNextMove(gameState);
     }
 
     initMyPos(gameState);
-    std::cerr << " > myPos: " << myPos.pos.x << " " << myPos.pos.y << " " << static_cast<int>(myPos.dir) << std::endl;
 
     auto isZone = [&](const OrientedPosition& oPos) {
         return zoneName[oPos.pos.x][oPos.pos.y] != '?';
     };
 
     if (isZone(myPos)) {
-        std::cerr << " >>> Jajco, I'm in zone <<< " << std::endl;
-        return Wait{};
+        // return Wait{};
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        if (gen() % 5 == 0) {
+            std::cerr << "FIRE" << std::endl;
+            return AbilityUse{AbilityType::fireBullet};
+        }
+        else {
+            auto randomRotation1 = static_cast<RotationDirection>(gen() % 3);
+            auto randomRotation2 = static_cast<RotationDirection>(gen() % 3);
+            return Rotate{randomRotation1, randomRotation2};
+        }
     }
     
     auto nxtMove = bfs(myPos, isZone);
     
     if (!nxtMove) {
-        std::cerr << " >>> Jajco, can't move to zone <<< " << std::endl;
         return Wait{};
     }
-
-    if (std::holds_alternative<MoveDirection>(*nxtMove)) {
-        if (std::get<MoveDirection>(*nxtMove) == MoveDirection::forward) {
-            std::cerr << " > move forward < " << std::endl;
-        } else {
-            std::cerr << " > move backward < " << std::endl;
-        }
-    } else {
-        if (std::get<RotationDirection>(*nxtMove) == RotationDirection::left) {
-            std::cerr << " > rotate left < " << std::endl;
-        } else {
-            std::cerr << " > rotate right < " << std::endl;
-        }
-    }
-
 
     if (std::holds_alternative<MoveDirection>(*nxtMove)) {
         return Move{std::get<MoveDirection>(*nxtMove)};

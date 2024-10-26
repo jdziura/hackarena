@@ -31,12 +31,16 @@ class Bot {
     std::vector<std::vector<char>> zoneName;
     std::vector<GameState> statesSnapshots;
     OrientedPosition myPos;
+    Item heldItem = Item{ItemType::unknown};
 
     void onFirstNextMove(const GameState& gameState);
-
     void initIsWall(const std::vector<std::vector<Tile>>& tiles);
     void initZoneName(const std::vector<std::vector<Tile>>& tiles);
     void initMyPos(const GameState& gameState);
+
+    bool haveItem() {
+        return heldItem.type != ItemType::unknown;
+    }
 
     template<class F>
     std::optional<MoveOrRotation> bfs(const OrientedPosition& start, F&& f) {
