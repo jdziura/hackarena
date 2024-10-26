@@ -77,23 +77,23 @@ void Bot::PrintMap(const std::vector<std::vector<Tile>>& tiles) {
     }
 
     // Print the map
-    for (const auto& row : map) {
-        bool firstTile = true; // Flag to handle spacing
-        for (const auto& tile : row) {
-            // Only print space before tile if it is not the first tile
-            if (firstTile) {
-                firstTile = false; // Reset the flag after the first tile is printed
-            } else {
-                // Check the length of the last printed tile
-                if (tile.length() == 1) {
-                    std::cout << ' '; // Print space for single character tiles
-                }
-            }
-            std::cout << tile; // Print the tile character(s)
-        }
-        std::cout << '\n'; // New line after each row
-    }
-    std::cout << "---------------------------------------------------" << std::endl;
+    // for (const auto& row : map) {
+    //     bool firstTile = true; // Flag to handle spacing
+    //     for (const auto& tile : row) {
+    //         // Only print space before tile if it is not the first tile
+    //         if (firstTile) {
+    //             firstTile = false; // Reset the flag after the first tile is printed
+    //         } else {
+    //             // Check the length of the last printed tile
+    //             if (tile.length() == 1) {
+    //                 std::cout << ' '; // Print space for single character tiles
+    //             }
+    //         }
+    //         std::cout << tile; // Print the tile character(s)
+    //     }
+    //     std::cout << '\n'; // New line after each row
+    // }
+    // std::cout << "---------------------------------------------------" << std::endl;
 }
 
 Bot::Bot() = default;
