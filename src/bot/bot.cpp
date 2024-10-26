@@ -147,10 +147,18 @@ ResponseVariant Bot::NextMove(const GameState& gameState) {
         onFirstNextMove(gameState);
     }
 
+    initMyPos(gameState);
+    std::cerr << " > myPos: " << myPos.pos.x << " " << myPos.pos.y << " " << static_cast<int>(myPos.dir) << std::endl;
+
     auto isZone = [&](const OrientedPosition& oPos) {
         return zoneName[oPos.pos.x][oPos.pos.y] != '?';
     };
 
+    if (isZone(myPos)) {
+        std::cerr << " >>> Jajco, I'm in zone <<< " << std::endl;
+        return Wait{};
+    }
+    
     auto nxtMove = bfs(myPos, isZone);
     
     if (!nxtMove) {
@@ -172,8 +180,6 @@ ResponseVariant Bot::NextMove(const GameState& gameState) {
         }
     }
 
-    myPos = afterMove(myPos, *nxtMove);
-    std::cerr << " > myPos: " << myPos.pos.x << " " << myPos.pos.y << " " << static_cast<int>(myPos.dir) << std::endl;
 
     if (std::holds_alternative<MoveDirection>(*nxtMove)) {
         return Move{std::get<MoveDirection>(*nxtMove)};
@@ -227,5 +233,4 @@ void Bot::initMyPos(const GameState& gameState) {
 void Bot::onFirstNextMove(const GameState& gameState) {
     initIsWall(gameState.map.tiles);
     initZoneName(gameState.map.tiles);
-    initMyPos(gameState);
 }

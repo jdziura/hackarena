@@ -69,6 +69,10 @@ class Bot {
                 int y = nextPos.pos.y;
                 int dir = getDirId(nextPos.dir);
 
+                if (isWall[x][y]) {
+                    continue;
+                }
+
                 if (visited[x][y][dir]) {
                     continue;
                 }
@@ -87,10 +91,11 @@ class Bot {
         MoveOrRotation lastMove = from[cur.pos.x][cur.pos.y][getDirId(cur.dir)];
 
         while (cur != start) {
-            const auto &mov = from[cur.pos.x][cur.pos.y][getDirId(cur.dir)];
-            cur.move(mov);
+            lastMove = from[cur.pos.x][cur.pos.y][getDirId(cur.dir)];
+            cur.move(lastMove);
         }
 
+        lastMove = reversed(lastMove);
         return lastMove;
     }
 };
