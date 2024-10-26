@@ -24,6 +24,7 @@ class Bot {
     /// END
 
     ResponseVariant RandomMove(const GameState& gameState);
+    ResponseVariant RandomRotateOrFire(const GameState& gameState);
 
     LobbyData lobbyData;
     int dim;
@@ -31,12 +32,19 @@ class Bot {
     std::vector<std::vector<char>> zoneName;
     std::vector<GameState> statesSnapshots;
     OrientedPosition myPos;
+    Direction myTurretDir;
     Item heldItem = Item{ItemType::unknown};
 
     void onFirstNextMove(const GameState& gameState);
     void initIsWall(const std::vector<std::vector<Tile>>& tiles);
     void initZoneName(const std::vector<std::vector<Tile>>& tiles);
     void initMyPos(const GameState& gameState);
+    void initTurretDir(const GameState& gameState);
+
+    bool canSeeEnemy(const GameState& gameState);
+
+    bool canMoveForwardInsideZone(const OrientedPosition& pos);
+    bool canMoveBackwardInsideZone(const OrientedPosition& pos);
 
     bool haveItem() {
         return heldItem.type != ItemType::unknown;

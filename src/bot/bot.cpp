@@ -138,34 +138,60 @@ ResponseVariant Bot::RandomMove(const GameState& gameState) {
     }
 }
 
+ResponseVariant Bot::RandomRotateOrFire(const GameState& gameState) {
+    if (canSeeEnemy(gameState)) {
+        // std::cerr << "FIRE" << std::endl;
+        return AbilityUse{AbilityType::fireBullet};
+    }
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+
+    if (gen() % 2 == 0) {
+        bool canMoveForward = canMoveForwardInsideZone(myPos);
+        bool canMoveBackward = canMoveBackwardInsideZone(myPos);
+        if (canMoveForward && canMoveBackward) {
+            auto randomMove = static_cast<MoveDirection>(gen() % 2);
+            return Move{randomMove};
+        } else if (canMoveForward) {
+            return Move{MoveDirection::forward};
+        } else if (canMoveBackward) {
+            return Move{MoveDirection::backward};
+        }
+    }
+
+    auto randomRotation1 = static_cast<RotationDirection>(gen() % 3);
+    auto randomRotation2 = static_cast<RotationDirection>(gen() % 3);
+    return Rotate{randomRotation1, randomRotation2};
+}
+
 ResponseVariant Bot::NextMove(const GameState& gameState) {
     clock_t start = clock();
     // std::cerr << " Round: " << gameState.time << std::endl;
     // PrintMap(gameState.map.tiles);
+    std::random_device rd;
+    std::mt19937 gen(rd());
 
     if (gameState.time == 1) {
         onFirstNextMove(gameState);
     }
 
+    auto lastPos = myPos;
     initMyPos(gameState);
+    initTurretDir(gameState);
+
+    if (lastPos == myPos && gen() % 4 == 0) {
+        // std::cerr << "STUCK" << std::endl;
+        return RandomRotateOrFire(gameState);
+    }
 
     auto isZone = [&](const OrientedPosition& oPos) {
         return zoneName[oPos.pos.x][oPos.pos.y] != '?';
     };
 
     if (isZone(myPos)) {
-        // return Wait{};
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        if (gen() % 5 == 0) {
-            std::cerr << "FIRE" << std::endl;
-            return AbilityUse{AbilityType::fireBullet};
-        }
-        else {
-            auto randomRotation1 = static_cast<RotationDirection>(gen() % 3);
-            auto randomRotation2 = static_cast<RotationDirection>(gen() % 3);
-            return Rotate{randomRotation1, randomRotation2};
-        }
+        // std::cerr << "IN ZONE" << std::endl;
+        return RandomRotateOrFire(gameState);
     }
     
     auto nxtMove = bfs(myPos, isZone);
@@ -201,9 +227,7 @@ void Bot::initZoneName(const std::vector<std::vector<Tile>>& tiles) {
     for (int i = 0; i < dim; ++i) {
         for (int j = 0; j < dim; ++j) {
             zoneName[i][j] = tiles[i][j].zoneName;
-            std::cerr << zoneName[i][j] << " ";
         }
-        std::cerr << std::endl;
     }
 }
 
@@ -223,7 +247,71 @@ void Bot::initMyPos(const GameState& gameState) {
     }
 }
 
+void Bot::initTurretDir(const GameState& gameState) {
+    for (int i = 0; i < dim; i++) {
+        for (int j = 0; j < dim; j++) {
+            for (const TileVariant& object : gameState.map.tiles[i][j].objects) {
+                if (std::holds_alternative<Tank>(object)) {
+                    const Tank& tank = std::get<Tank>(object);
+                    if (tank.ownerId == myId) {
+                        myTurretDir = tank.turret.direction;
+                        return;
+                    }
+                }
+            }
+        }
+    }
+}
+
 void Bot::onFirstNextMove(const GameState& gameState) {
     initIsWall(gameState.map.tiles);
     initZoneName(gameState.map.tiles);
+}
+
+bool Bot::canSeeEnemy(const GameState& gameState) {
+    int x = myPos.pos.x;
+    int y = myPos.pos.y;
+    int dir = getDirId(myTurretDir);
+
+    auto [dx, dy] = Position::DIRECTIONS[dir];
+
+    for (int i = 1; i < dim; ++i) {
+        x += dx;
+        y += dy;
+        if (!isValid(Position(x, y), dim)) {
+            break;
+        }
+        if (isWall[x][y]) {
+            break;
+        }
+        if (!gameState.map.tiles[x][y].isVisible) {
+            break;
+        }
+        for (const TileVariant& object : gameState.map.tiles[x][y].objects) {
+            if (std::holds_alternative<Tank>(object)) {
+                const Tank& tank = std::get<Tank>(object);
+                if (tank.ownerId != myId) {
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
+bool Bot::canMoveForwardInsideZone(const OrientedPosition& pos) {
+    auto [dx, dy] = Position::DIRECTIONS[getDirId(pos.dir)];
+    auto nextPos = pos;
+    nextPos.pos.x += dx;
+    nextPos.pos.y += dy;
+    return isValid(nextPos.pos, dim) && !isWall[nextPos.pos.x][nextPos.pos.y] && zoneName[nextPos.pos.x][nextPos.pos.y] != '?';
+}
+
+bool Bot::canMoveBackwardInsideZone(const OrientedPosition& pos) {
+    auto [dx, dy] = Position::DIRECTIONS[getDirId(pos.dir)];
+    auto nextPos = pos;
+    nextPos.pos.x -= dx;
+    nextPos.pos.y -= dy;
+    return isValid(nextPos.pos, dim) && !isWall[nextPos.pos.x][nextPos.pos.y] && zoneName[nextPos.pos.x][nextPos.pos.y] != '?';
 }
