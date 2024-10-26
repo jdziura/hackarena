@@ -1,5 +1,3 @@
-# Example usage:
-# python3 run_tests.py -n 20 -b random_bot_v1 random_bot_v1 -r --ticks 500 --broadcast-interval 200 --grid-dimension 8
 import os
 import subprocess
 import argparse
@@ -58,15 +56,17 @@ def run_server(test_id, port, num_players, args, experiment_dir):
             ]
         )
 
-    print(
-        f"[INFO] Starting server for test {test_id} on port {port} with {num_players} players"
-    )
-    print(f"[COMMAND] {' '.join(command)}")
-    subprocess.Popen(command)
+    log_file = os.path.join(experiment_dir, f"server_{test_id}.log")
+    with open(log_file, "w") as log:
+        print(
+            f"[INFO] Starting server for test {test_id} on port {port} with {num_players} players"
+        )
+        print(f"[COMMAND] {' '.join(command)}")
+        subprocess.Popen(command, stdout=log, stderr=log)
     time.sleep(10)  # Wait for 10 seconds to allow the server to initialize properly
 
 
-def run_bot(test_id, bot_name, bot_id, port, host):
+def run_bot(test_id, bot_name, bot_id, port, host, experiment_dir):
     unique_nickname = f"bot_{test_id}_{bot_id}"
     command = [
         f"./bot_binaries/{bot_name}",
@@ -77,40 +77,72 @@ def run_bot(test_id, bot_name, bot_id, port, host):
         "--port",
         str(port),
     ]
-    print(
-        f"[INFO] Starting bot {bot_id} ({bot_name}) with nickname {unique_nickname} for test {test_id} on port {port}"
-    )
-    print(f"[COMMAND] {' '.join(command)}")
-    subprocess.Popen(command)
+
+    log_file = os.path.join(experiment_dir, f"bot_{test_id}_{bot_id}.log")
+    with open(log_file, "w") as log:
+        print(
+            f"[INFO] Starting bot {bot_id} ({bot_name}) with nickname {unique_nickname} for test {test_id} on port {port}"
+        )
+        print(f"[COMMAND] {' '.join(command)}")
+        subprocess.Popen(command, stdout=log, stderr=log)
 
 
-def summarize_results(experiment_dir, num_tests):
-    summary = defaultdict(int)
+def summarize_results(experiment_dir, num_tests, num_players):
+    scores = defaultdict(int)
+    draws = 0
+    fails = 0
     for i in range(num_tests):
-        replay_file = os.path.join(experiment_dir, f"replay_{i}.json")
+        replay_file = os.path.join(experiment_dir, f"replay_{i}_results.json")
         if os.path.exists(replay_file):
             try:
                 with open(replay_file, "r") as file:
                     if os.stat(replay_file).st_size == 0:
                         print(f"[WARNING] Replay file {replay_file} is empty.")
+                        fails += 1
                         continue
 
                     replay_data = json.load(file)
                     players = replay_data.get("players", [])
-                    winner = max(players, key=lambda x: x.get("score", 0), default=None)
-                    if winner:
-                        winner_nickname = winner.get("nickname")
-                        summary[winner_nickname] += 1
+
+                    # Sort players based on score and kills
+                    players.sort(key=lambda p: (p["score"], p["kills"]), reverse=True)
+
+                    # Check for a draw if all players have the same score and kills
+                    if len(players) > 0 and all(
+                        p["score"] == players[0]["score"]
+                        and p["kills"] == players[0]["kills"]
+                        for p in players
+                    ):
+                        draws += 1
                     else:
-                        print(f"[INFO] No winner found in replay file {replay_file}.")
+                        # Allocate points based on the number of players
+                        points_distribution = {4: [3, 2, 1, 0], 3: [2, 1, 0], 2: [1, 0]}
+                        points = points_distribution.get(num_players)
+
+                        if points:
+                            for idx, player in enumerate(players):
+                                nickname = player.get("nickname")
+                                scores[nickname] += points[idx]
+                        else:
+                            print(f"[ERROR] Invalid number of players: {num_players}")
+
             except json.JSONDecodeError:
                 print(f"[ERROR] Failed to decode JSON in replay file {replay_file}.")
             except Exception as e:
                 print(f"[ERROR] An unexpected error occurred: {e}")
 
+    # Summarize and print results
     print("\n=== Experiment Summary ===")
-    for nickname, wins in summary.items():
-        print(f"{nickname}: {wins} wins")
+    points = [0 for _ in range(num_players)]
+    for player, score in scores.items():
+        player_number = int(player.split("_")[-1]) - 1  # Extract player index (1-based)
+        if 0 <= player_number < num_players:
+            points[player_number] += score
+
+    for i, point in enumerate(points):
+        print(f"Player {i + 1}: {point} points")
+    print(f"Draws: {draws} matches")
+    print(f"Failed matches: {fails}")
     print("=========================")
 
 
@@ -180,14 +212,16 @@ def main():
             time.sleep(1)
             # Run bots for the server based on the number provided
             for bot_id, bot_name in enumerate(args.bots, start=1):
-                executor.submit(run_bot, i, bot_name, bot_id, port, args.host)
+                executor.submit(
+                    run_bot, i, bot_name, bot_id, port, args.host, experiment_dir
+                )
 
     # Allow time for all experiments to finish
     total_time = args.broadcast_interval * args.ticks / 1000 + 15
     time.sleep(total_time)
 
     # Summarize results after all experiments are done
-    summarize_results(experiment_dir, args.n)
+    summarize_results(experiment_dir, args.n, len(args.bots))
 
     # Cleanup processes after summarizing
     cleanup_processes()
