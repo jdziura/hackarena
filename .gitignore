@@ -2,3 +2,7 @@
 cmake-build*/
 out
 .vs
+build
+vcpkg_installed
+logs
+data
