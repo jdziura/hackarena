@@ -180,12 +180,16 @@ ResponseVariant Bot::NextMove(const GameState& gameState) {
     knowledgeMap.update(gameState);
 
     std::optional<ResponseVariant> response;
-    
+
+    response = shootIfWillFireHitForSure(gameState);
+    if (response.has_value()) 
+        return response.value();
+
     response = dropMineIfPossible(gameState);
     if (response.has_value()) 
         return response.value();
 
-    response = shootIfWillFireHitForSure(gameState);
+    response = useRadarIfPossible(gameState);
     if (response.has_value()) 
         return response.value();
 
@@ -198,32 +202,22 @@ ResponseVariant Bot::NextMove(const GameState& gameState) {
     }
 
     auto bullet = closestBullet(gameState, myPos.pos);
-    std::cerr << " > closestBullet: " << bullet.x << " " << bullet.y << std::endl;
-
-    auto isOnBulletLine = [&](const OrientedPosition& oPos) {
+    auto isOnBulletLine = [&](const OrientedPosition& oPos, int timer) {
         return oPos.pos.x != bullet.x && oPos.pos.y != bullet.y;
     };
 
     if (bullet.x != 1e9) {
-        auto nxtMove = bfs(myPos, isOnBulletLine);
-        if (!nxtMove) {
-            std::cerr << " >>> Jajco, can't move from bullet <<< " << std::endl;
-            return Wait{};
-        }
-
-        if (std::holds_alternative<MoveDirection>(*nxtMove)) {
-            return Move{std::get<MoveDirection>(*nxtMove)};
-        } else {
-            return Rotate{std::get<RotationDirection>(*nxtMove), RotationDirection::none};
-        }
+        response = bfsStrategy(gameState, isOnBulletLine);
+        if (response.has_value())
+            return response.value();
     }
 
-    auto isZone = [&](const OrientedPosition& oPos) {
+    auto isZone = [&](const OrientedPosition& oPos, int timer) {
         return zoneName[oPos.pos.x][oPos.pos.y] != '?';
     };
 
-    if (isZone(myPos)) {
-        response = shootIfSeeingEnemy(gameState);
+    if (isZone(myPos, 0)) {
+        response = shootIfSeeingEnemy(gameState, false, false);
         if (response.has_value())
             return response.value();
         if (heldItem == SecondaryItemType::Mine && isBetweenWalls(myPos.pos, isWall, dim)) {
@@ -231,19 +225,13 @@ ResponseVariant Bot::NextMove(const GameState& gameState) {
         }
         return BeDrunkInsideZone(gameState);
     }
-    
-    auto nxtMove = bfs(myPos, isZone);
+
+    response = bfsStrategy(gameState, isZone);
+    if (response.has_value())
+        return response.value();
     
     // TODO: dziwny przypadek, jestśmy odizolowanie od wszystkich stref, można przemyśleć co z tym zrobić
-    if (!nxtMove) {
-        return Wait{};
-    }
-
-    if (std::holds_alternative<MoveDirection>(*nxtMove)) {
-        return Move{std::get<MoveDirection>(*nxtMove)};
-    } else {
-        return Rotate{std::get<RotationDirection>(*nxtMove), RotationDirection::none};
-    }
+    return BeDrunkInsideZone(gameState);
 }
 
 void Bot::initIsWall(const std::vector<std::vector<Tile>>& tiles) {
@@ -388,6 +376,14 @@ std::optional<ResponseVariant> Bot::dropMineIfPossible(const GameState& gameStat
     return std::nullopt;
 }
 
+std::optional<ResponseVariant> Bot::useRadarIfPossible(const GameState& gameState) {
+    if (heldItem == SecondaryItemType::Radar) {
+        return AbilityUse{AbilityType::useRadar};
+    }
+
+    return std::nullopt;
+}
+
 std::optional<ResponseVariant> Bot::shootIfSeeingEnemy(
         const GameState& gameState, 
         bool useLaserIfPossible, 
@@ -406,6 +402,12 @@ std::optional<ResponseVariant> Bot::shootIfWillFireHitForSure(
     return shootIf(gameState, [&](const GameState& gameState) {
         return willFireHitForSure(gameState);
     }, useLaserIfPossible, useDoubleBulletIfPossible);
+}
+
+bool Bot::willBeHitByBullet(const GameState& gameState, const OrientedPosition& pos) const {
+    int x = pos.pos.x;
+    int y = pos.pos.y;
+    return knowledgeMap.willBeHitByBulletInNextMove(x, y);
 }
 
 bool Bot::knowWhereIs(const TileVariant& object, const GameState& gamestate) const {

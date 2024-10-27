@@ -40,6 +40,7 @@ class Bot {
 
     // strategies
     std::optional<ResponseVariant> dropMineIfPossible(const GameState& gameState);
+    std::optional<ResponseVariant> useRadarIfPossible(const GameState& gameState);
 
     std::optional<ResponseVariant> shootIfSeeingEnemy(
         const GameState& gameState, 
@@ -61,29 +62,37 @@ class Bot {
 
     bool canSeeEnemy(const GameState& gameState) const;
     bool willFireHitForSure(const GameState& gameState) const;
+    bool willBeHitByBullet(const GameState& gameState, const OrientedPosition& pos) const;
 
     bool canMoveForwardInsideZone(const OrientedPosition& pos) const;
     bool canMoveBackwardInsideZone(const OrientedPosition& pos) const;
     bool knowWhereIs(const TileVariant& object, const GameState& gamestate) const;
 
+    struct BfsResult {
+        MoveOrRotation move;
+        int eta;
+    };
+
     template<class F>
-    std::optional<MoveOrRotation> bfs(const OrientedPosition& start, F&& f) {
-        std::queue<OrientedPosition> q;
+    std::optional<BfsResult> bfs(const OrientedPosition& start, F&& f) {
+        std::queue<std::pair<OrientedPosition, int>> q;
         std::vector<std::vector<std::vector<bool>>> visited(dim, std::vector<std::vector<bool>>(dim, std::vector<bool>(4, false)));
         std::vector<std::vector<std::vector<MoveOrRotation>>> from(dim, std::vector<std::vector<MoveOrRotation>>(dim, std::vector<MoveOrRotation>(4))); // i, j, dir
-        q.push(start);
+        q.push({start, 0});
         visited[start.pos.x][start.pos.y][getDirId(start.dir)] = true;
 
         bool found = false;
         OrientedPosition finish;
+        int eta = -1;
 
         while (!q.empty()) {
-            OrientedPosition pos = q.front();
+            auto [pos, timer] = q.front();
             q.pop();
 
-            if (f(pos)) {
+            if (f(pos, timer)) {
                 found = true;
                 finish = pos;
+                eta = timer;
                 break;
             }
 
@@ -107,7 +116,7 @@ class Bot {
 
                 visited[x][y][dir] = true;
                 from[x][y][dir] = reversed(move);
-                q.push(nextPos);
+                q.push({nextPos, timer + 1});
             }
         }
 
@@ -124,7 +133,7 @@ class Bot {
         }
 
         lastMove = reversed(lastMove);
-        return lastMove;
+        return BfsResult{lastMove, eta};
     }
 
     template<class F>
@@ -151,5 +160,31 @@ class Bot {
         }
         
         return AbilityUse{AbilityType::fireBullet};
+    }
+
+    template<class F>
+    std::optional<ResponseVariant> bfsStrategy(const GameState& gameState, F&& f) {
+        auto result = bfs(myPos, f);
+        if (!result) {
+            return std::nullopt;
+        }
+
+        auto nxtMove = result->move;
+        auto eta = result->eta;
+        auto nextPos = afterMove(myPos, nxtMove);
+
+        bool hitNow = willBeHitByBullet(gameState, myPos);
+        bool hitNxt = willBeHitByBullet(gameState, nextPos);
+
+        if (hitNxt && !hitNow) {
+            // TODO: wait or think about rotating?
+            return Wait{};
+        }
+
+        if (std::holds_alternative<MoveDirection>(nxtMove)) {
+            return Move{std::get<MoveDirection>(nxtMove)};
+        } else {
+            return Rotate{std::get<RotationDirection>(nxtMove), RotationDirection::none};
+        }
     }
 };
