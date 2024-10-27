@@ -226,6 +226,9 @@ ResponseVariant Bot::NextMove(const GameState& gameState) {
         response = shootIfSeeingEnemy(gameState);
         if (response.has_value())
             return response.value();
+        if (heldItem == SecondaryItemType::Mine && isBetweenWalls(myPos.pos, isWall, dim)) {
+            return AbilityUse{AbilityType::dropMine};
+        }
         return BeDrunkInsideZone(gameState);
     }
     
