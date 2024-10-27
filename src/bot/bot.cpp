@@ -404,3 +404,37 @@ std::optional<ResponseVariant> Bot::shootIfWillFireHitForSure(
         return willFireHitForSure(gameState);
     }, useLaserIfPossible, useDoubleBulletIfPossible);
 }
+
+bool Bot::knowWhereIs(const TileVariant& object, const GameState& gamestate) const {
+    for (auto row: gamestate.map.tiles) {
+        for (auto tile: row) {
+            for (auto obj: tile.objects) {
+                if (obj.index() == object.index()) {
+                    if (std::holds_alternative<Tank>(obj)) {
+                        if (std::get<Tank>(obj).ownerId != myId) {
+                            return true;
+                        }
+                    } else {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    for (auto row: knowledgeMap.tiles) {
+        for (auto tile: row) {
+            for (auto obj: tile.objects) {
+                if (obj.object.index() == object.index()) {
+                    if (std::holds_alternative<Tank>(obj.object)) {
+                        if (std::get<Tank>(obj.object).ownerId != myId) {
+                            return true;
+                        }
+                    } else {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    return false;
+}

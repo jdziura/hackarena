@@ -64,6 +64,7 @@ class Bot {
 
     bool canMoveForwardInsideZone(const OrientedPosition& pos) const;
     bool canMoveBackwardInsideZone(const OrientedPosition& pos) const;
+    bool knowWhereIs(const TileVariant& object, const GameState& gamestate) const;
 
     template<class F>
     std::optional<MoveOrRotation> bfs(const OrientedPosition& start, F&& f) {
