@@ -40,7 +40,10 @@ class Bot {
 
     // strategies
     std::optional<ResponseVariant> dropMineIfPossible(const GameState& gameState);
+    std::optional<ResponseVariant> dropMineIfReasonable(const GameState& gameState);
     std::optional<ResponseVariant> useRadarIfPossible(const GameState& gameState);
+
+    std::optional<ResponseVariant> goForItem(const GameState& gameState);
 
     std::optional<ResponseVariant> shootIfSeeingEnemy(
         const GameState& gameState, 

@@ -213,6 +213,19 @@ ResponseVariant Bot::NextMove(const GameState& gameState) {
     if (response.has_value()) 
         return response.value();
 
+    response = dropMineIfReasonable(gameState);
+    if (response.has_value()) 
+        return response.value();
+
+    response = goForItem(gameState);
+    if (response.has_value()) 
+        return response.value();
+
+    response = useRadarIfPossible(gameState);
+    if (response.has_value()) 
+        return response.value();
+
+
     auto isZone = [&](const OrientedPosition& oPos, int timer) {
         return zoneName[oPos.pos.x][oPos.pos.y] != '?';
     };
@@ -221,6 +234,9 @@ ResponseVariant Bot::NextMove(const GameState& gameState) {
         response = shootIfSeeingEnemy(gameState, false, false);
         if (response.has_value())
             return response.value();
+        if (heldItem == SecondaryItemType::Mine && isBetweenWalls(myPos.pos, isWall, dim)) {
+            return AbilityUse{AbilityType::dropMine};
+        }
         return BeDrunkInsideZone(gameState);
     }
 
@@ -374,11 +390,51 @@ std::optional<ResponseVariant> Bot::dropMineIfPossible(const GameState& gameStat
     return std::nullopt;
 }
 
+std::optional<ResponseVariant> Bot::dropMineIfReasonable(const GameState& gameState) {
+    if (heldItem == SecondaryItemType::Mine && (isBetweenWalls(myPos.pos, isWall, dim) || knowWhereIs(Item{}, gameState) || zoneName[myPos.pos.x][myPos.pos.y] != '?')) {
+        return AbilityUse{AbilityType::dropMine};
+    }
+
+    return std::nullopt;
+}
+
 std::optional<ResponseVariant> Bot::useRadarIfPossible(const GameState& gameState) {
     if (heldItem == SecondaryItemType::Radar) {
         return AbilityUse{AbilityType::useRadar};
     }
 
+    return std::nullopt;
+}
+
+std::optional<ResponseVariant> Bot::goForItem(const GameState& gameState) {
+    if (knowWhereIs(Item{}, gameState) && heldItem == SecondaryItemType::unknown) {
+        auto isItem = [&](const OrientedPosition& oPos, int timer) {
+            int DOUBLE_BULLET_RANGE = 4;
+            int OTHER_ITEM_RANGE = 10;
+            for (const TileVariant& object : gameState.map.tiles[oPos.pos.x][oPos.pos.y].objects) {
+                if (std::holds_alternative<Item>(object) && std::get<Item>(object).type == ItemType::mine) {
+                    if (timer < OTHER_ITEM_RANGE) return true;
+                } else if (std::holds_alternative<Item>(object) && std::get<Item>(object).type == ItemType::radar) {
+                    if (timer < OTHER_ITEM_RANGE) return true;
+                } else if (std::holds_alternative<Item>(object) && std::get<Item>(object).type == ItemType::doubleBullet) {
+                    if (timer < DOUBLE_BULLET_RANGE) return true;
+                } else if (std::holds_alternative<Item>(object) && std::get<Item>(object).type == ItemType::laser) {
+                    if (timer < OTHER_ITEM_RANGE) return true;
+                }
+            }
+            for (auto object: knowledgeMap.tiles[oPos.pos.x][oPos.pos.y].objects) {
+                if (std::holds_alternative<Item>(object.object) && std::get<Item>(object.object).type == ItemType::mine) {
+                    if (timer < OTHER_ITEM_RANGE) return true;
+                } else if (std::holds_alternative<Item>(object.object) && std::get<Item>(object.object).type == ItemType::doubleBullet) {
+                    if (timer < DOUBLE_BULLET_RANGE) return true;
+                } else if (std::holds_alternative<Item>(object.object) && std::get<Item>(object.object).type == ItemType::laser) {
+                    if (timer < OTHER_ITEM_RANGE) return true;
+                }
+            }
+            return false;
+        };
+        return bfsStrategy(gameState, isItem);
+    }
     return std::nullopt;
 }
 

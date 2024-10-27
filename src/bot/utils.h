@@ -310,7 +310,7 @@ inline bool isOnBulletLine(Position bullet, Position myPos) {
 }
 
 
-inline ResponseVariant RotateInDirection(const Direction& myDir, const Direction& targetDir) {
+inline ResponseVariant rotateInDirection(const Direction& myDir, const Direction& targetDir) {
     if ((getDirId(myDir) - getDirId(targetDir)) % 4 == 3) {
         return Rotate{RotationDirection::none, RotationDirection::left};
     } else if ((getDirId(targetDir) - getDirId(myDir)) % 4 == 0) {
@@ -318,4 +318,19 @@ inline ResponseVariant RotateInDirection(const Direction& myDir, const Direction
     } else {
         return Rotate{RotationDirection::none, RotationDirection::right};
     }
+}
+
+inline bool isBetweenWalls(Position myPos, const std::vector<std::vector<bool>>& isWall, int dim) {
+    int x = myPos.x;
+    int y = myPos.y;
+    
+    if ((!isValid(Position(x - 1, y), dim) || isWall[x - 1][y])
+        && (!isValid(Position(x + 1, y), dim) || isWall[x + 1][y])) {
+        return true;
+    }
+    if ((!isValid(Position(x, y - 1), dim) || isWall[x][y - 1])
+        && (!isValid(Position(x, y + 1), dim) || isWall[x][y + 1])) {
+        return true;
+    }
+    return false;
 }
