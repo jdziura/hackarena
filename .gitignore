@@ -6,3 +6,4 @@ build
 vcpkg_installed
 logs
 data
+bot_binaries
