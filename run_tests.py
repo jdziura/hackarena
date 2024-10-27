@@ -206,7 +206,7 @@ def main():
     used_ports = set()
     base_port = find_available_port(5000, used_ports)
 
-    batch_spread = 4
+    batch_spread = 10
     for batch_start in range(0, args.n, batch_spread):
         futures = []
         with ThreadPoolExecutor(max_workers=batch_spread * (num_bots + 1)) as executor:

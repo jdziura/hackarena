@@ -204,7 +204,7 @@ ResponseVariant Bot::NextMove(const GameState& gameState) {
         if (response.has_value())
             return response.value();
     }
-
+    
     response = dropMineIfReasonable(gameState);
     if (response.has_value()) 
         return response.value();
@@ -217,11 +217,32 @@ ResponseVariant Bot::NextMove(const GameState& gameState) {
     if (response.has_value()) 
         return response.value();
 
-    auto isZone = [&](const OrientedPosition& oPos, int timer) {
-        return zoneName[oPos.pos.x][oPos.pos.y] != '?';
-    };
-
-    if (isZone(myPos, 0)) {
+    // Choosing a free zone if exists
+    Zone zone_1 = gameState.map.zones[0];
+    Zone zone_2 = gameState.map.zones[1];
+    std::function<bool(const OrientedPosition &, int timer)> isZone;
+    // print statuses of both zones
+    // std::cout << " > Zone 1: " << zone_1.status.type << " " << zone_1.status.playerId.value_or("None") << " " << zone_1.status.capturedById.value_or("None") << " " << zone_1.status.retakenById.value_or("None") << std::endl;
+    // std::cout << " > Zone 2: " << zone_2.status.type << " " << zone_2.status.playerId.value_or("None") << " " << zone_2.status.capturedById.value_or("None") << " " << zone_2.status.retakenById.value_or("None") << std::endl;
+    if (isZoneCapturedByPlayer(zone_1, myId) && myTank.health.value() % 20 == 1)
+    {
+        // std::cout << "[DEBUG] Zone 1 is owned by the player. Targeting Zone 2.\n";
+        // std ::cout << " > Targeting: " << zone_2.name << std::endl;
+        isZone = targetZone(zone_2.name, zoneName);
+    }
+    else if (isZoneCapturedByPlayer(zone_2, myId) && myTank.health.value() % 20 == 1)
+    {
+        // std::cout << "[DEBUG] Zone 2 is owned by the player. Targeting Zone 1.\n";
+        // std::cout << " > Targeting: " << zone_1.name << std::endl;
+        isZone = targetZone(zone_1.name, zoneName);
+    }
+    else
+    {
+        std::cout << "[DEBUG] No specific conditions met. Targeting any zone.\n";
+        isZone = targetAnyZone(zoneName);
+    }
+    if (isZone(myPos, 0))
+    {
         response = shootIfSeeingEnemy(gameState, false, false);
         if (response.has_value())
             return response.value();
@@ -446,15 +467,27 @@ std::optional<ResponseVariant> Bot::goForItem(const GameState& gameState) {
                     if (timer < OTHER_ITEM_RANGE) return true;
                 }
             }
-            for (auto object: knowledgeMap.tiles[oPos.pos.x][oPos.pos.y].objects) {
-                if (std::holds_alternative<Item>(object.object) && std::get<Item>(object.object).type == ItemType::mine) {
-                    if (timer < OTHER_ITEM_RANGE) return true;
-                } else if (std::holds_alternative<Item>(object.object) && std::get<Item>(object.object).type == ItemType::radar) {
-                    if (timer < OTHER_ITEM_RANGE) return true;
-                } else if (std::holds_alternative<Item>(object.object) && std::get<Item>(object.object).type == ItemType::doubleBullet) {
-                    if (timer < DOUBLE_BULLET_RANGE) return true;
-                } else if (std::holds_alternative<Item>(object.object) && std::get<Item>(object.object).type == ItemType::laser) {
-                    if (timer < OTHER_ITEM_RANGE) return true;
+            for (auto object : knowledgeMap.tiles[oPos.pos.x][oPos.pos.y].objects)
+            {
+                if (std::holds_alternative<Item>(object.object) && std::get<Item>(object.object).type == ItemType::mine)
+                {
+                    if (timer < OTHER_ITEM_RANGE)
+                        return true;
+                }
+                else if (std::holds_alternative<Item>(object.object) && std::get<Item>(object.object).type == ItemType::radar)
+                {
+                    if (timer < OTHER_ITEM_RANGE)
+                        return true;
+                }
+                else if (std::holds_alternative<Item>(object.object) && std::get<Item>(object.object).type == ItemType::doubleBullet)
+                {
+                    if (timer < DOUBLE_BULLET_RANGE)
+                        return true;
+                }
+                else if (std::holds_alternative<Item>(object.object) && std::get<Item>(object.object).type == ItemType::laser)
+                {
+                    if (timer < OTHER_ITEM_RANGE)
+                        return true;
                 }
             }
             return false;

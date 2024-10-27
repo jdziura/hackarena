@@ -355,6 +355,35 @@ inline ResponseVariant rotateInDirection(const Direction& myDir, const Direction
     }
 }
 
+// types are captured, beingCaptured, neutral, beingContested, beingRetaken
+inline bool isZoneFree(const Zone &zone)
+{
+    return zone.status.type == "neutral";
+}
+
+inline bool isZoneCapturedByPlayer(const Zone &zone, const std::string &playerId)
+{
+    return zone.status.type == "captured" &&
+           zone.status.playerId == playerId;
+}
+
+inline std::function<bool(const OrientedPosition &, int timer)> targetZone(char zoneNameToTarget, const std::vector<std::vector<char>> &zoneName)
+{
+    std::cout<<zoneNameToTarget<<std::endl;
+    return [&](const OrientedPosition &oPos, int timer)
+    {
+        return zoneName[oPos.pos.x][oPos.pos.y] == zoneNameToTarget;
+    };
+}
+
+inline std::function<bool(const OrientedPosition &, int timer)> targetAnyZone(const std::vector<std::vector<char>> &zoneName)
+{
+    return [&](const OrientedPosition &oPos, int timer)
+    {
+        return zoneName[oPos.pos.x][oPos.pos.y] != '?';
+    };
+}
+
 inline bool isBetweenWalls(Position myPos, const std::vector<std::vector<bool>>& isWall, int dim) {
     int x = myPos.x;
     int y = myPos.y;
