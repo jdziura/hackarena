@@ -195,6 +195,27 @@ ResponseVariant Bot::NextMove(const GameState& gameState) {
         return BeDrunkInsideZone(gameState);
     }
 
+    auto bullet = closestBullet(gameState, myPos.pos);
+    std::cerr << " > closestBullet: " << bullet.x << " " << bullet.y << std::endl;
+
+    auto isOnBulletLine = [&](const OrientedPosition& oPos) {
+        return oPos.pos.x != bullet.x && oPos.pos.y != bullet.y;
+    };
+
+    if (bullet.x != 1e9) {
+        auto nxtMove = bfs(myPos, isOnBulletLine);
+        if (!nxtMove) {
+            std::cerr << " >>> Jajco, can't move from bullet <<< " << std::endl;
+            return Wait{};
+        }
+
+        if (std::holds_alternative<MoveDirection>(*nxtMove)) {
+            return Move{std::get<MoveDirection>(*nxtMove)};
+        } else {
+            return Rotate{std::get<RotationDirection>(*nxtMove), RotationDirection::none};
+        }
+    }
+
     auto isZone = [&](const OrientedPosition& oPos) {
         return zoneName[oPos.pos.x][oPos.pos.y] != '?';
     };
