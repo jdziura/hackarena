@@ -204,3 +204,77 @@ struct KnowledgeMap {
         }
     }
 };
+
+inline Position closestBullet(const GameState& gameState, const Position& myPos) {
+    Position closestBulletPos = Position(1e9, 1e9);
+    double closestBulletDist = 1e9;
+
+    // Position result = Position(1e9, 1e9);
+    for (int i = 0; i < myPos.x; i++) {
+        if (gameState.map.tiles[i][myPos.y].objects.size() > 0) {
+            for (const auto& obj : gameState.map.tiles[i][myPos.y].objects) {
+                if (std::holds_alternative<Bullet>(obj)) {
+                    const auto& bullet = std::get<Bullet>(obj);
+                    if (bullet.direction == Direction::down) {
+                        if (myPos.x - i < closestBulletDist) {
+                            closestBulletDist = myPos.x - i;
+                            closestBulletPos = Position(i, myPos.y);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    for (int i = myPos.x + 1; i < gameState.map.tiles.size(); i++) {
+        if (gameState.map.tiles[i][myPos.y].objects.size() > 0) {
+            for (const auto& obj : gameState.map.tiles[i][myPos.y].objects) {
+                if (std::holds_alternative<Bullet>(obj)) {
+                    const auto& bullet = std::get<Bullet>(obj);
+                    if (bullet.direction == Direction::up) {
+                        if (i - myPos.x < closestBulletDist) {
+                            closestBulletDist = i - myPos.x;
+                            closestBulletPos = Position(i, myPos.y);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    for (int i = 0; i < myPos.y; i++) {
+        if (gameState.map.tiles[myPos.x][i].objects.size() > 0) {
+            for (const auto& obj : gameState.map.tiles[myPos.x][i].objects) {
+                if (std::holds_alternative<Bullet>(obj)) {
+                    const auto& bullet = std::get<Bullet>(obj);
+                    if (bullet.direction == Direction::right) {
+                        if (myPos.y - i < closestBulletDist) {
+                            closestBulletDist = myPos.y - i;
+                            closestBulletPos = Position(myPos.x, i);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    for (int i = myPos.y + 1; i < gameState.map.tiles[0].size(); i++) {
+        if (gameState.map.tiles[myPos.x][i].objects.size() > 0) {
+            for (const auto& obj : gameState.map.tiles[myPos.x][i].objects) {
+                if (std::holds_alternative<Bullet>(obj)) {
+                    const auto& bullet = std::get<Bullet>(obj);
+                    if (bullet.direction == Direction::left) {
+                        if (i - myPos.y < closestBulletDist) {
+                            closestBulletDist = i - myPos.y;
+                            closestBulletPos = Position(myPos.x, i);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return closestBulletPos;
+}
+
+inline bool isOnBulletLine(Position bullet, Position myPos) {
+    return bullet.x == myPos.x || bullet.y == myPos.y;
+}
+
