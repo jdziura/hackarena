@@ -20,6 +20,7 @@ project(HackArena2.0-MonoTanks-Cxx)
 set(CMAKE_CXX_STANDARD 20)
 
 # Custom compiler flags
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -g -fsanitize=address,undefined")
 
 find_package(Boost REQUIRED COMPONENTS system beast asio)

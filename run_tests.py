@@ -41,6 +41,7 @@ def run_server(test_id, port, num_players, args, experiment_dir):
         str(args.ticks),
         "--broadcast-interval",
         str(args.broadcast_interval),
+        "--eager-broadcast",
         "--match-name",
         f"match_{test_id}",
     ]
@@ -84,7 +85,8 @@ def run_bot(test_id, bot_name, bot_id, port, host, experiment_dir):
             f"[INFO] Starting bot {bot_id} ({bot_name}) with nickname {unique_nickname} for test {test_id} on port {port}"
         )
         print(f"[COMMAND] {' '.join(command)}")
-        subprocess.Popen(command, stdout=log, stderr=log)
+        # subprocess.Popen(command, stdout=log, stderr=log)
+        subprocess.run(command, stdout=log, stderr=log)
 
 
 def summarize_results(experiment_dir, num_tests, num_players):
@@ -204,34 +206,52 @@ def main():
     used_ports = set()
     base_port = find_available_port(5000, used_ports)
 
-    batch_spread = 25
-    with ThreadPoolExecutor(max_workers=batch_spread * (num_bots + 1)) as executor:
-        for batch_start in range(0, args.n, batch_spread):
+    batch_spread = 4
+    for batch_start in range(0, args.n, batch_spread):
+        futures = []
+        with ThreadPoolExecutor(max_workers=batch_spread * (num_bots + 1)) as executor:
             # Limit to batch_spread or remaining tests, whichever is smaller
             current_batch_size = min(batch_spread, args.n - batch_start)
+
+            test_ids = []
+            ports = []
 
             for i in range(current_batch_size):
                 test_id = batch_start + i
                 port = find_available_port(base_port, used_ports)
-                executor.submit(
-                    run_server, test_id, port, num_bots, args, experiment_dir
-                )
-                time.sleep(1)
+                test_ids.append(test_id)
+                ports.append(port)
 
+            for i in range(current_batch_size):
+                executor.submit(
+                    run_server, test_ids[i], ports[i], num_bots, args, experiment_dir
+                )
+
+            time.sleep(1)
+            print("[INFO] Waiting for 1 second before starting bots...")
+
+            for i in range(current_batch_size):
                 for bot_id, bot_name in enumerate(args.bots, start=1):
-                    executor.submit(
-                        run_bot,
-                        test_id,
-                        bot_name,
-                        bot_id,
-                        port,
-                        args.host,
-                        experiment_dir,
+                    futures.append(
+                        executor.submit(
+                            run_bot,
+                            test_ids[i],
+                            bot_name,
+                            bot_id,
+                            ports[i],
+                            args.host,
+                            experiment_dir,
+                        )
                     )
 
-            total_time = args.broadcast_interval * args.ticks / 1000 + 5
-            print(f"[INFO] Waiting for {total_time} seconds before the next batch...")
-            time.sleep(total_time)
+                # total_time = args.broadcast_interval * args.ticks / 1000 + 5
+                # total_time = 10
+                # print(f"[INFO] Waiting for {total_time} seconds before the next batch...")
+                # time.sleep(total_time)
+        
+        print("[INFO] Waiting for games to complete...")
+        for future in futures:
+            future.result()
 
     # Summarize results after all experiments are done
     summarize_results(experiment_dir, args.n, len(args.bots))
