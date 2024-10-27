@@ -399,6 +399,18 @@ std::optional<ResponseVariant> Bot::dropMineIfPossible(const GameState& gameStat
 
 std::optional<ResponseVariant> Bot::dropMineIfReasonable(const GameState& gameState) {
     if (heldItem == SecondaryItemType::Mine && (isBetweenWalls(myPos.pos, isWall, dim) || zoneName[myPos.pos.x][myPos.pos.y] != '?')) {
+        auto [dx, dy] = Position::DIRECTIONS[getDirId(myPos.dir)];
+
+        Position minePos = myPos.pos;
+        minePos.x -= dx;
+        minePos.y -= dy;
+
+        if (!isValid(minePos, dim) || isWall[minePos.x][minePos.y]) {
+            return std::nullopt;
+        }
+
+        knowledgeMap.notifyMine(gameState, minePos);
+
         return AbilityUse{AbilityType::dropMine};
     }
 
