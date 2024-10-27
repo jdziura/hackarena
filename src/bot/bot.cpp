@@ -185,13 +185,6 @@ ResponseVariant Bot::NextMove(const GameState& gameState) {
     if (response.has_value()) 
         return response.value();
 
-    response = dropMineIfPossible(gameState);
-    if (response.has_value()) 
-        return response.value();
-
-    response = useRadarIfPossible(gameState);
-    if (response.has_value()) 
-        return response.value();
 
     // TODO: jakieś gówno XD niech będzie na razie ale potem można wyjebać
     if (lastPos == myPos && gen() % 4 == 0) {
@@ -211,6 +204,46 @@ ResponseVariant Bot::NextMove(const GameState& gameState) {
         if (response.has_value())
             return response.value();
     }
+
+    response = dropMineIfPossible(gameState);
+    if (response.has_value()) 
+        return response.value();
+
+    if (knowWhereIs(Item{}, gameState) && heldItem == SecondaryItemType::unknown) {
+        auto isMine = [&](const OrientedPosition& oPos, int timer) {
+            for (const TileVariant& object : gameState.map.tiles[oPos.pos.x][oPos.pos.y].objects) {
+                if (std::holds_alternative<Item>(object) && std::get<Item>(object).type == ItemType::mine) {
+                    if (timer < 10) return true;
+                } else if (std::holds_alternative<Item>(object) && std::get<Item>(object).type == ItemType::radar) {
+                    if (timer < 50) return true;
+                } else if (std::holds_alternative<Item>(object) && std::get<Item>(object).type == ItemType::doubleBullet) {
+                    if (timer < 5) return true;
+                } else if (std::holds_alternative<Item>(object) && std::get<Item>(object).type == ItemType::laser) {
+                    if (timer < 20) return true;
+                }
+            }
+            for (auto object: knowledgeMap.tiles[oPos.pos.x][oPos.pos.y].objects) {
+                if (std::holds_alternative<Item>(object.object) && std::get<Item>(object.object).type == ItemType::mine) {
+                    if (timer < 10) return true;
+                } else if (std::holds_alternative<Item>(object.object) && std::get<Item>(object.object).type == ItemType::radar) {
+                    if (timer < 2) return true;
+                } else if (std::holds_alternative<Item>(object.object) && std::get<Item>(object.object).type == ItemType::doubleBullet) {
+                    if (timer < 5) return true;
+                } else if (std::holds_alternative<Item>(object.object) && std::get<Item>(object.object).type == ItemType::laser) {
+                    if (timer < 20) return true;
+                }
+            }
+            return false;
+        };
+        response = bfsStrategy(gameState, isMine);
+        if (response.has_value())
+            return response.value();
+    }
+
+    response = useRadarIfPossible(gameState);
+    if (response.has_value()) 
+        return response.value();
+
 
     auto isZone = [&](const OrientedPosition& oPos, int timer) {
         return zoneName[oPos.pos.x][oPos.pos.y] != '?';
