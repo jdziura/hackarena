@@ -393,26 +393,26 @@ std::optional<ResponseVariant> Bot::useRadarIfPossible(const GameState& gameStat
 std::optional<ResponseVariant> Bot::goForItem(const GameState& gameState) {
     if (knowWhereIs(Item{}, gameState) && heldItem == SecondaryItemType::unknown) {
         auto isItem = [&](const OrientedPosition& oPos, int timer) {
+            int DOUBLE_BULLET_RANGE = 4;
+            int OTHER_ITEM_RANGE = 10;
             for (const TileVariant& object : gameState.map.tiles[oPos.pos.x][oPos.pos.y].objects) {
                 if (std::holds_alternative<Item>(object) && std::get<Item>(object).type == ItemType::mine) {
-                    if (timer < 10) return true;
+                    if (timer < OTHER_ITEM_RANGE) return true;
                 } else if (std::holds_alternative<Item>(object) && std::get<Item>(object).type == ItemType::radar) {
-                    if (timer < 50) return true;
+                    if (timer < OTHER_ITEM_RANGE) return true;
                 } else if (std::holds_alternative<Item>(object) && std::get<Item>(object).type == ItemType::doubleBullet) {
-                    if (timer < 5) return true;
+                    if (timer < DOUBLE_BULLET_RANGE) return true;
                 } else if (std::holds_alternative<Item>(object) && std::get<Item>(object).type == ItemType::laser) {
-                    if (timer < 20) return true;
+                    if (timer < OTHER_ITEM_RANGE) return true;
                 }
             }
             for (auto object: knowledgeMap.tiles[oPos.pos.x][oPos.pos.y].objects) {
                 if (std::holds_alternative<Item>(object.object) && std::get<Item>(object.object).type == ItemType::mine) {
-                    if (timer < 10) return true;
-                } else if (std::holds_alternative<Item>(object.object) && std::get<Item>(object.object).type == ItemType::radar) {
-                    if (timer < 2) return true;
+                    if (timer < OTHER_ITEM_RANGE) return true;
                 } else if (std::holds_alternative<Item>(object.object) && std::get<Item>(object.object).type == ItemType::doubleBullet) {
-                    if (timer < 5) return true;
+                    if (timer < DOUBLE_BULLET_RANGE) return true;
                 } else if (std::holds_alternative<Item>(object.object) && std::get<Item>(object.object).type == ItemType::laser) {
-                    if (timer < 20) return true;
+                    if (timer < OTHER_ITEM_RANGE) return true;
                 }
             }
             return false;
