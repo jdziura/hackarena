@@ -194,6 +194,10 @@ ResponseVariant Bot::NextMove(const GameState& gameState) {
         return BeDrunkInsideZone(gameState);
     }
 
+    response = dodgeIfNoAmmoAndWillBeHit(gameState);
+    if (response.has_value()) 
+        return response.value();
+
     auto bullet = closestBullet(gameState, myPos.pos);
     auto isOnBulletLine = [&](const OrientedPosition& oPos, int timer) {
         return oPos.pos.x != bullet.x && oPos.pos.y != bullet.y;
@@ -633,4 +637,60 @@ bool Bot::knowWhereIs(const TileVariant& object, const GameState& gamestate) con
         }
     }
     return false;
+}
+
+std::optional<ResponseVariant> Bot::dodgeIfNoAmmoAndWillBeHit(const GameState& gameState) {
+    for (int i = 0; i < 4; i++) {
+        auto [dx, dy] = Position::DIRECTIONS[i];
+
+        if (i == getDirId(myTurretDir)) {
+            if (myBulletCount > 0) {
+                continue;
+            }
+            if (heldItem == SecondaryItemType::Laser) {
+                continue;
+            }
+            if (heldItem == SecondaryItemType::DoubleBullet) {
+                continue;
+            }
+        }
+
+        for (int j = 1; j <= 2; j++) {
+            auto nextPos = myPos;
+            nextPos.pos.x += j * dx;
+            nextPos.pos.y += j * dy;
+
+            if (!isValid(nextPos.pos, dim)) {
+                break;
+            }
+
+            if (isWall[nextPos.pos.x][nextPos.pos.y]) {
+                break;
+            }
+
+            for (const TileVariant& object : gameState.map.tiles[nextPos.pos.x][nextPos.pos.y].objects) {
+                if (std::holds_alternative<Tank>(object)) {
+                    const Tank& tank = std::get<Tank>(object);
+                    if (tank.ownerId != myId) {
+                        if (getDirId(tank.turret.direction) == (i + 2) % 4) {
+                            if (!isParallel(myPos.dir, tank.turret.direction)) {
+                                for (auto mov : {MoveDirection::forward, MoveDirection::backward}) {
+                                    auto nxtPos = afterMove(myPos, mov);
+                                    if (isValid(nxtPos.pos, dim) 
+                                     && !isWall[nxtPos.pos.x][nxtPos.pos.y]
+                                     && !willBeHitByBullet(gameState, nxtPos)
+                                     && !knowledgeMap.containsMine(nxtPos.pos)) 
+                                    {
+                                        return Move{mov};
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return std::nullopt;
 }

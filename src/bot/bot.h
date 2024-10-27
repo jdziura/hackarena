@@ -57,6 +57,8 @@ class Bot {
         bool useDoubleBulletIfPossible = true
     );
 
+    std::optional<ResponseVariant> dodgeIfNoAmmoAndWillBeHit(const GameState& gameState);
+
     std::optional<ResponseVariant> rotateToEnemy(const GameState& gameState);
 
     void onFirstNextMove(const GameState& gameState);
