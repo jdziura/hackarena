@@ -210,7 +210,7 @@ ResponseVariant Bot::NextMove(const GameState& gameState) {
         return response.value();
 
     if (knowWhereIs(Item{}, gameState) && heldItem == SecondaryItemType::unknown) {
-        auto isMine = [&](const OrientedPosition& oPos, int timer) {
+        auto isItem = [&](const OrientedPosition& oPos, int timer) {
             for (const TileVariant& object : gameState.map.tiles[oPos.pos.x][oPos.pos.y].objects) {
                 if (std::holds_alternative<Item>(object) && std::get<Item>(object).type == ItemType::mine) {
                     if (timer < 10) return true;
@@ -235,7 +235,7 @@ ResponseVariant Bot::NextMove(const GameState& gameState) {
             }
             return false;
         };
-        response = bfsStrategy(gameState, isMine);
+        response = bfsStrategy(gameState, isItem);
         if (response.has_value())
             return response.value();
     }
