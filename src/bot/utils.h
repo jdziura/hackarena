@@ -163,6 +163,37 @@ struct KnowledgeMap {
         tiles = std::vector<std::vector<KnowledgeTile>>(dim, std::vector<KnowledgeTile>(dim));
     }
 
+    bool willBeHitByBulletInNextMove(int x, int y) const {
+        for (int i = 0; i < 4; i++) {
+            auto [dx, dy] = Position::DIRECTIONS[i];
+            for (int j = 1; j < 2; j++) {
+                int nx = x + j * dx;
+                int ny = y + j * dy;
+                if (!isValid(Position(nx, ny), tiles.size())) {
+                    break;
+                }
+                for (const auto& obj : tiles[x][y].objects) {
+                    if (std::holds_alternative<Bullet>(obj.object)) {
+                        const auto& bullet = std::get<Bullet>(obj.object);
+                        if (bullet.direction == Direction::down && i == 0) {
+                            return true;
+                        }
+                        if (bullet.direction == Direction::up && i == 2) {
+                            return true;
+                        }
+                        if (bullet.direction == Direction::right && i == 3) {
+                            return true;
+                        }
+                        if (bullet.direction == Direction::left && i == 1) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     void update(const GameState& gameState) {
         std::vector<std::pair<Bullet, Position>> bullets;
 
