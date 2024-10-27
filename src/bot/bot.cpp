@@ -107,6 +107,7 @@ void Bot::Init(const LobbyData& _lobbyData) {
     dim = lobbyData.gridDimension;
     myId = lobbyData.myId;
     skipResponse = lobbyData.broadcastInterval - 1;
+    knowledgeMap.init(dim);
 }
 
 ResponseVariant Bot::RandomMove(const GameState& gameState) {
@@ -176,6 +177,7 @@ ResponseVariant Bot::NextMove(const GameState& gameState) {
 
     auto lastPos = myPos;
     initMyTank(gameState);
+    knowledgeMap.update(gameState);
 
     std::optional<ResponseVariant> response;
     
@@ -183,9 +185,9 @@ ResponseVariant Bot::NextMove(const GameState& gameState) {
     if (response.has_value()) 
         return response.value();
 
-    // response = shootIfSeeingEnemy(gameState);
-    // if (response.has_value()) 
-    //     return response.value();
+    response = shootIfWillFireHitForSure(gameState);
+    if (response.has_value()) 
+        return response.value();
 
     // TODO: jakieś gówno XD niech będzie na razie ale potem można wyjebać
     if (lastPos == myPos && gen() % 4 == 0) {
@@ -302,6 +304,41 @@ bool Bot::canSeeEnemy(const GameState& gameState) const {
     return false;
 }
 
+bool Bot::willFireHitForSure(const GameState& gameState) const {
+    int x = myPos.pos.x;
+    int y = myPos.pos.y;
+    int dir = getDirId(myTurretDir);
+
+    auto [dx, dy] = Position::DIRECTIONS[dir];
+
+    for (int i = 1; i < 2; i++) {
+        x += dx;
+        y += dy;
+        if (!isValid(Position(x, y), dim)) {
+            break;
+        }
+        if (isWall[x][y]) {
+            break;
+        }
+        if (!gameState.map.tiles[x][y].isVisible) {
+            break;
+        }
+        for (const TileVariant& object : gameState.map.tiles[x][y].objects) {
+            if (std::holds_alternative<Tank>(object)) {
+                const Tank& tank = std::get<Tank>(object);
+                if (tank.ownerId == myId) {
+                    continue;
+                }
+                if (isParallel(myTurretDir, tank.direction)) {
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
 bool Bot::canMoveForwardInsideZone(const OrientedPosition& pos) const {
     auto [dx, dy] = Position::DIRECTIONS[getDirId(pos.dir)];
     auto nextPos = pos;
@@ -327,18 +364,22 @@ std::optional<ResponseVariant> Bot::dropMineIfPossible(const GameState& gameStat
     return std::nullopt;
 }
 
-std::optional<ResponseVariant> Bot::shootIfSeeingEnemy(const GameState& gameState) {
-    if (myBulletCount == 0) {
-        return std::nullopt;
-    }
+std::optional<ResponseVariant> Bot::shootIfSeeingEnemy(
+        const GameState& gameState, 
+        bool useLaserIfPossible, 
+        bool useDoubleBulletIfPossible
+) {
+    return shootIf(gameState, [&](const GameState& gameState) {
+        return canSeeEnemy(gameState);
+    }, useLaserIfPossible, useDoubleBulletIfPossible);
+}
 
-    if (!canSeeEnemy(gameState)) {
-        return std::nullopt;
-    }
-
-    if (heldItem == SecondaryItemType::DoubleBullet) {
-        return AbilityUse{AbilityType::fireDoubleBullet};
-    }
-    
-    return AbilityUse{AbilityType::fireBullet};
+std::optional<ResponseVariant> Bot::shootIfWillFireHitForSure(
+        const GameState& gameState, 
+        bool useLaserIfPossible, 
+        bool useDoubleBulletIfPossible
+) {
+    return shootIf(gameState, [&](const GameState& gameState) {
+        return willFireHitForSure(gameState);
+    }, useLaserIfPossible, useDoubleBulletIfPossible);
 }
