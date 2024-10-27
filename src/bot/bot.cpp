@@ -204,7 +204,7 @@ ResponseVariant Bot::NextMove(const GameState& gameState) {
         if (response.has_value())
             return response.value();
     }
-    
+
     response = dropMineIfReasonable(gameState);
     if (response.has_value()) 
         return response.value();
@@ -420,6 +420,8 @@ std::optional<ResponseVariant> Bot::goForItem(const GameState& gameState) {
             }
             for (auto object: knowledgeMap.tiles[oPos.pos.x][oPos.pos.y].objects) {
                 if (std::holds_alternative<Item>(object.object) && std::get<Item>(object.object).type == ItemType::mine) {
+                    if (timer < OTHER_ITEM_RANGE) return true;
+                } else if (std::holds_alternative<Item>(object.object) && std::get<Item>(object.object).type == ItemType::radar) {
                     if (timer < OTHER_ITEM_RANGE) return true;
                 } else if (std::holds_alternative<Item>(object.object) && std::get<Item>(object.object).type == ItemType::doubleBullet) {
                     if (timer < DOUBLE_BULLET_RANGE) return true;
