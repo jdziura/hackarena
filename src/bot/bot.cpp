@@ -331,7 +331,12 @@ bool Bot::willFireHitForSure(const GameState& gameState) const {
 
     auto [dx, dy] = Position::DIRECTIONS[dir];
 
-    for (int i = 1; i < 2; i++) {
+    int bound = 2;
+    if (heldItem == SecondaryItemType::Laser) {
+        bound = dim;
+    }
+
+    for (int i = 1; i < bound; i++) {
         x += dx;
         y += dy;
         if (!isValid(Position(x, y), dim)) {

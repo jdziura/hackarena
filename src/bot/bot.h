@@ -157,7 +157,11 @@ class Bot {
             bool useLaserIfPossible = true, 
             bool useDoubleBulletIfPossible = true
     ) {
-        if (myBulletCount == 0) {
+        bool ignoreBulletCount = (heldItem == SecondaryItemType::DoubleBullet && useDoubleBulletIfPossible);
+        ignoreBulletCount |=     (heldItem == SecondaryItemType::Laser && useLaserIfPossible);
+
+        if (myBulletCount == 0 && !ignoreBulletCount)
+        {
             return std::nullopt;
         }
 
