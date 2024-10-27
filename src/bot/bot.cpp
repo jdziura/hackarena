@@ -205,7 +205,7 @@ ResponseVariant Bot::NextMove(const GameState& gameState) {
             return response.value();
     }
 
-    response = dropMineIfPossible(gameState);
+    response = dropMineIfReasonable(gameState);
     if (response.has_value()) 
         return response.value();
 
@@ -376,6 +376,14 @@ bool Bot::canMoveBackwardInsideZone(const OrientedPosition& pos) const {
 std::optional<ResponseVariant> Bot::dropMineIfPossible(const GameState& gameState) {
     if (heldItem == SecondaryItemType::Mine) {
         // TODO: track it for some rounds
+        return AbilityUse{AbilityType::dropMine};
+    }
+
+    return std::nullopt;
+}
+
+std::optional<ResponseVariant> Bot::dropMineIfReasonable(const GameState& gameState) {
+    if (heldItem == SecondaryItemType::Mine && (isBetweenWalls(myPos.pos, isWall, dim) || knowWhereIs(Item{}, gameState) || zoneName[myPos.pos.x][myPos.pos.y] != '?')) {
         return AbilityUse{AbilityType::dropMine};
     }
 
