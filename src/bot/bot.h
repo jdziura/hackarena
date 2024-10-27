@@ -28,6 +28,7 @@ class Bot {
 
     LobbyData lobbyData;
     int dim;
+    KnowledgeMap knowledgeMap;
     std::vector<std::vector<bool>> isWall;
     std::vector<std::vector<char>> zoneName;
     // std::vector<GameState> statesSnapshots;
@@ -39,7 +40,18 @@ class Bot {
 
     // strategies
     std::optional<ResponseVariant> dropMineIfPossible(const GameState& gameState);
-    std::optional<ResponseVariant> shootIfSeeingEnemy(const GameState& gameState);
+
+    std::optional<ResponseVariant> shootIfSeeingEnemy(
+        const GameState& gameState, 
+        bool useLaserIfPossible = true, 
+        bool useDoubleBulletIfPossible = true
+    );
+
+    std::optional<ResponseVariant> shootIfWillFireHitForSure(
+        const GameState& gameState, 
+        bool useLaserIfPossible = true, 
+        bool useDoubleBulletIfPossible = true
+    );
 
     void onFirstNextMove(const GameState& gameState);
     void initIsWall(const std::vector<std::vector<Tile>>& tiles);
@@ -48,6 +60,7 @@ class Bot {
     void initMyTankHelper(const GameState& gameState);
 
     bool canSeeEnemy(const GameState& gameState) const;
+    bool willFireHitForSure(const GameState& gameState) const;
 
     bool canMoveForwardInsideZone(const OrientedPosition& pos) const;
     bool canMoveBackwardInsideZone(const OrientedPosition& pos) const;
@@ -111,5 +124,31 @@ class Bot {
 
         lastMove = reversed(lastMove);
         return lastMove;
+    }
+
+    template<class F>
+    std::optional<ResponseVariant> shootIf(
+            const GameState& gameState, 
+            F&& f, 
+            bool useLaserIfPossible = true, 
+            bool useDoubleBulletIfPossible = true
+    ) {
+        if (myBulletCount == 0) {
+            return std::nullopt;
+        }
+
+        if (!f(gameState)) {
+            return std::nullopt;
+        }
+
+        if (useLaserIfPossible && heldItem == SecondaryItemType::Laser) {
+            return AbilityUse{AbilityType::useLaser};
+        }
+
+        if (useDoubleBulletIfPossible && heldItem == SecondaryItemType::DoubleBullet) {
+            return AbilityUse{AbilityType::fireDoubleBullet};
+        }
+        
+        return AbilityUse{AbilityType::fireBullet};
     }
 };

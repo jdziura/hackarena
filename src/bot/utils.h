@@ -1,5 +1,7 @@
 #pragma once
 
+#include <set>
+
 #include "../processed-packets.h"
 
 constexpr inline int getDirId(const Direction& dir) {
@@ -129,6 +131,80 @@ inline OrientedPosition afterMove(OrientedPosition pos, const MoveOrRotation& ac
     return pos;
 }
 
+constexpr inline bool isParallel(const Direction& dir1, const Direction& dir2) {
+    int id1 = getDirId(dir1);
+    int id2 = getDirId(dir2);
+    return id1 == id2 || id1 == (id2 + 2) % 4;
+}
+
+struct KnowledgeTileVariant {
+    int lastSeen;
+    TileVariant object;
+    auto operator<=>(const KnowledgeTileVariant&) const = default;
+};
+
+struct KnowledgeTileVariantComparator {
+    bool operator()(const KnowledgeTileVariant& lhs, const KnowledgeTileVariant& rhs) const {
+        return lhs.lastSeen < rhs.lastSeen;
+    }
+};
+
+struct KnowledgeTile {
+    std::set<KnowledgeTileVariant, KnowledgeTileVariantComparator> objects;
+    auto operator<=>(const KnowledgeTile&) const = default;
+};
+
+struct KnowledgeMap {
+    static constexpr int MAX_TRACK_TIME = 5;
+
+    std::vector<std::vector<KnowledgeTile>> tiles;
+
+    void init(int dim) {
+        tiles = std::vector<std::vector<KnowledgeTile>>(dim, std::vector<KnowledgeTile>(dim));
+    }
+
+    void update(const GameState& gameState) {
+        std::vector<std::pair<Bullet, Position>> bullets;
+
+        for (int i = 0; i < gameState.map.tiles.size(); ++i) {
+            for (int j = 0; j < gameState.map.tiles[i].size(); ++j) {
+                if (gameState.map.tiles[i][j].isVisible) {
+                    tiles[i][j].objects.clear();
+                    for (const TileVariant& object : gameState.map.tiles[i][j].objects) {
+                        if (!std::holds_alternative<Wall>(object)) {
+                            tiles[i][j].objects.insert({gameState.time, object});
+                        }
+                    }
+                }
+                else {
+                    for (auto it = tiles[i][j].objects.begin(); it != tiles[i][j].objects.end();) {
+                        if (std::holds_alternative<Bullet>(it->object)) {
+                            bullets.emplace_back(std::get<Bullet>(it->object), Position(i, j));
+                            it = tiles[i][j].objects.erase(it);
+                        } else if (gameState.time - it->lastSeen > MAX_TRACK_TIME) {
+                            it = tiles[i][j].objects.erase(it);
+                        } else {
+                            ++it;
+                        }
+                    }
+                }
+            }
+        }
+
+        for (auto [bullet, pos] : bullets) {
+            auto [dx, dy] = Position::DIRECTIONS[getDirId(bullet.direction)];
+            for (int i = 0; i < 2; i++) {
+                pos.x += dx;
+                pos.y += dy;
+                if (!isValid(pos, tiles.size())) {
+                    break;
+                }
+                tiles[pos.x][pos.y].objects.insert({gameState.time, bullet});
+            }
+        }
+    }
+};
+
 inline Position closestBullet(const GameState& gameState, const Position& myPos) {
     Position closestBulletPos = Position(1e9, 1e9);
     double closestBulletDist = 1e9;
@@ -201,3 +277,4 @@ inline Position closestBullet(const GameState& gameState, const Position& myPos)
 inline bool isOnBulletLine(Position bullet, Position myPos) {
     return bullet.x == myPos.x || bullet.y == myPos.y;
 }
+
