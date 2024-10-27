@@ -42,6 +42,8 @@ class Bot {
     std::optional<ResponseVariant> dropMineIfPossible(const GameState& gameState);
     std::optional<ResponseVariant> useRadarIfPossible(const GameState& gameState);
 
+    std::optional<ResponseVariant> goForItem(const GameState& gameState);
+
     std::optional<ResponseVariant> shootIfSeeingEnemy(
         const GameState& gameState, 
         bool useLaserIfPossible = true, 
