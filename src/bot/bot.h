@@ -66,6 +66,7 @@ class Bot {
 
     bool canMoveForwardInsideZone(const OrientedPosition& pos) const;
     bool canMoveBackwardInsideZone(const OrientedPosition& pos) const;
+    bool knowWhereIs(const TileVariant& object, const GameState& gamestate) const;
 
     struct BfsResult {
         MoveOrRotation move;
