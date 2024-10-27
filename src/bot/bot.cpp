@@ -387,7 +387,7 @@ std::optional<ResponseVariant> Bot::dropMineIfPossible(const GameState& gameStat
 }
 
 std::optional<ResponseVariant> Bot::dropMineIfReasonable(const GameState& gameState) {
-    if (heldItem == SecondaryItemType::Mine && (isBetweenWalls(myPos.pos, isWall, dim) || knowWhereIs(Item{}, gameState) || zoneName[myPos.pos.x][myPos.pos.y] != '?')) {
+    if (heldItem == SecondaryItemType::Mine && (isBetweenWalls(myPos.pos, isWall, dim) || zoneName[myPos.pos.x][myPos.pos.y] != '?')) {
         return AbilityUse{AbilityType::dropMine};
     }
 
