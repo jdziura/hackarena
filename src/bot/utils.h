@@ -278,3 +278,13 @@ inline bool isOnBulletLine(Position bullet, Position myPos) {
     return bullet.x == myPos.x || bullet.y == myPos.y;
 }
 
+
+inline ResponseVariant RotateInDirection(const Direction& myDir, const Direction& targetDir) {
+    if ((getDirId(myDir) - getDirId(targetDir)) % 4 == 3) {
+        return Rotate{RotationDirection::none, RotationDirection::left};
+    } else if ((getDirId(targetDir) - getDirId(myDir)) % 4 == 0) {
+        return Wait{};
+    } else {
+        return Rotate{RotationDirection::none, RotationDirection::right};
+    }
+}
