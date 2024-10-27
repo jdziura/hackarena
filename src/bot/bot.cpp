@@ -205,15 +205,11 @@ ResponseVariant Bot::NextMove(const GameState& gameState) {
             return response.value();
     }
     
-    response = dropMineIfPossible(gameState);
+    response = dropMineIfReasonable(gameState);
     if (response.has_value()) 
         return response.value();
 
     response = useRadarIfPossible(gameState);
-    if (response.has_value()) 
-        return response.value();
-
-    response = dropMineIfReasonable(gameState);
     if (response.has_value()) 
         return response.value();
 
