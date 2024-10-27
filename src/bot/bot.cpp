@@ -185,13 +185,6 @@ ResponseVariant Bot::NextMove(const GameState& gameState) {
     if (response.has_value()) 
         return response.value();
 
-    response = dropMineIfPossible(gameState);
-    if (response.has_value()) 
-        return response.value();
-
-    response = useRadarIfPossible(gameState);
-    if (response.has_value()) 
-        return response.value();
 
     // TODO: jakieś gówno XD niech będzie na razie ale potem można wyjebać
     if (lastPos == myPos && gen() % 4 == 0) {
@@ -211,6 +204,14 @@ ResponseVariant Bot::NextMove(const GameState& gameState) {
         if (response.has_value())
             return response.value();
     }
+    
+    response = dropMineIfPossible(gameState);
+    if (response.has_value()) 
+        return response.value();
+
+    response = useRadarIfPossible(gameState);
+    if (response.has_value()) 
+        return response.value();
 
     auto isZone = [&](const OrientedPosition& oPos, int timer) {
         return zoneName[oPos.pos.x][oPos.pos.y] != '?';
