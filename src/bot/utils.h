@@ -155,18 +155,21 @@ struct KnowledgeTile {
 };
 
 struct KnowledgeMap {
-    static constexpr int MAX_TRACK_TIME = 5;
+    static constexpr int MAX_TRACK_TIME = 10;
+    static constexpr int MINE_TRACK_TIME = 100;
 
     std::vector<std::vector<KnowledgeTile>> tiles;
+    std::vector<std::vector<int>> minesLiveness;
 
     void init(int dim) {
         tiles = std::vector<std::vector<KnowledgeTile>>(dim, std::vector<KnowledgeTile>(dim));
+        minesLiveness = std::vector<std::vector<int>>(dim, std::vector<int>(dim, 0));
     }
 
-    bool willBeHitByBulletInNextMove(int x, int y) const {
+    bool isOnBulletTraj(int x, int y, int numTicks = 10) const {
         for (int i = 0; i < 4; i++) {
             auto [dx, dy] = Position::DIRECTIONS[i];
-            for (int j = 1; j < 2; j++) {
+            for (int j = 1; j < 2 * numTicks; j++) {
                 int nx = x + j * dx;
                 int ny = y + j * dy;
                 if (!isValid(Position(nx, ny), tiles.size())) {
@@ -188,10 +191,25 @@ struct KnowledgeMap {
                             return true;
                         }
                     }
+                    else if (std::holds_alternative<Laser>(obj.object)) {
+                        return true;
+                    }
                 }
             }
         }
         return false;
+    }
+
+    bool willBeHitByBulletInNextMove(int x, int y) const {
+        return isOnBulletTraj(x, y, 1);
+    }
+
+    void notifyMine(const GameState& gameState, const Position& pos) {
+        minesLiveness[pos.x][pos.y] = MINE_TRACK_TIME;
+    }
+
+    bool containsMine(const Position& pos) {
+        return minesLiveness[pos.x][pos.y] > 0;
     }
 
     void update(const GameState& gameState) {
@@ -202,6 +220,9 @@ struct KnowledgeMap {
                 if (gameState.map.tiles[i][j].isVisible) {
                     tiles[i][j].objects.clear();
                     for (const TileVariant& object : gameState.map.tiles[i][j].objects) {
+                        if (std::holds_alternative<Mine>(object)) {
+                            notifyMine(gameState, Position(i, j));
+                        }
                         if (!std::holds_alternative<Wall>(object)) {
                             tiles[i][j].objects.insert({gameState.time, object});
                         }
@@ -231,6 +252,14 @@ struct KnowledgeMap {
                     break;
                 }
                 tiles[pos.x][pos.y].objects.insert({gameState.time, bullet});
+            }
+        }
+
+        for (int i = 0; i < minesLiveness.size(); ++i) {
+            for (int j = 0; j < minesLiveness[i].size(); ++j) {
+                if (minesLiveness[i][j] > 0) {
+                    --minesLiveness[i][j];
+                }
             }
         }
     }
@@ -309,6 +338,12 @@ inline bool isOnBulletLine(Position bullet, Position myPos) {
     return bullet.x == myPos.x || bullet.y == myPos.y;
 }
 
+inline RotationDirection getRotationTo(const Direction& from, const Direction& to) {
+    if (from == to) {
+        return RotationDirection::none;
+    }
+    return rotated(from, RotationDirection::right) == to ? RotationDirection::right : RotationDirection::left;
+}
 
 inline ResponseVariant rotateInDirection(const Direction& myDir, const Direction& targetDir) {
     if ((getDirId(myDir) - getDirId(targetDir)) % 4 == 3) {
@@ -334,3 +369,4 @@ inline bool isBetweenWalls(Position myPos, const std::vector<std::vector<bool>>&
     }
     return false;
 }
+

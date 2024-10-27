@@ -217,11 +217,6 @@ ResponseVariant Bot::NextMove(const GameState& gameState) {
     if (response.has_value()) 
         return response.value();
 
-    response = useRadarIfPossible(gameState);
-    if (response.has_value()) 
-        return response.value();
-
-
     auto isZone = [&](const OrientedPosition& oPos, int timer) {
         return zoneName[oPos.pos.x][oPos.pos.y] != '?';
     };
@@ -230,9 +225,12 @@ ResponseVariant Bot::NextMove(const GameState& gameState) {
         response = shootIfSeeingEnemy(gameState, false, false);
         if (response.has_value())
             return response.value();
-        if (heldItem == SecondaryItemType::Mine && isBetweenWalls(myPos.pos, isWall, dim)) {
-            return AbilityUse{AbilityType::dropMine};
+
+        response = rotateToEnemy(gameState);
+        if (response.has_value()) {
+            return response.value();
         }
+
         return BeDrunkInsideZone(gameState);
     }
 
@@ -378,12 +376,25 @@ bool Bot::canMoveBackwardInsideZone(const OrientedPosition& pos) const {
 }
 
 std::optional<ResponseVariant> Bot::dropMineIfPossible(const GameState& gameState) {
-    if (heldItem == SecondaryItemType::Mine) {
-        // TODO: track it for some rounds
-        return AbilityUse{AbilityType::dropMine};
+    if (heldItem != SecondaryItemType::Mine) {
+        return std::nullopt;
     }
 
-    return std::nullopt;
+    auto [dx, dy] = Position::DIRECTIONS[getDirId(myPos.dir)];
+
+    Position minePos = myPos.pos;
+    minePos.x -= dx;
+    minePos.y -= dy;
+
+    if (!isValid(minePos, dim) || isWall[minePos.x][minePos.y]) {
+        return std::nullopt;
+    }
+
+    knowledgeMap.notifyMine(gameState, minePos);
+
+    std::cerr << "[EVENT] Dropping mine at " << minePos.x << " " << minePos.y << std::endl;
+
+    return AbilityUse{AbilityType::dropMine};
 }
 
 std::optional<ResponseVariant> Bot::dropMineIfReasonable(const GameState& gameState) {
@@ -454,6 +465,117 @@ std::optional<ResponseVariant> Bot::shootIfWillFireHitForSure(
     return shootIf(gameState, [&](const GameState& gameState) {
         return willFireHitForSure(gameState);
     }, useLaserIfPossible, useDoubleBulletIfPossible);
+}
+
+std::optional<ResponseVariant> Bot::rotateToEnemy(const GameState& gameState) {
+    auto isVisibleEnemy = [&](const OrientedPosition& pos, int timer) {
+        if (!gameState.map.tiles[pos.pos.x][pos.pos.y].isVisible)
+            return false;
+
+        for (const TileVariant& object : gameState.map.tiles[pos.pos.x][pos.pos.y].objects) {
+            if (std::holds_alternative<Tank>(object)) {
+                const Tank& tank = std::get<Tank>(object);
+                if (tank.ownerId != myId) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    };
+
+    auto isPotentialEnemy = [&](const OrientedPosition& pos, int timer) {
+        if (gameState.map.tiles[pos.pos.x][pos.pos.y].isVisible)
+            return false;
+
+        for (const KnowledgeTileVariant& object : knowledgeMap.tiles[pos.pos.x][pos.pos.y].objects) {
+            if (std::holds_alternative<Tank>(object.object)) {
+                const Tank& tank = std::get<Tank>(object.object);
+                if (tank.ownerId != myId) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    };
+
+    auto result = bfs(myPos, isVisibleEnemy);
+    if (!result.has_value()) {
+        result = bfs(myPos, isPotentialEnemy);
+        if (!result.has_value()) {
+            return std::nullopt;
+        }
+    }
+
+    auto enemyPos = result.value().finalPos;
+
+    auto dx = enemyPos.pos.x - myPos.pos.x;
+    auto dy = enemyPos.pos.y - myPos.pos.y;
+
+    Direction desiredTankDir;
+    Direction desiredTurretDir;
+
+    if (dx >= abs(dy)) {
+        desiredTurretDir = Direction::down;
+        if (dy >= 0) {
+            desiredTankDir = Direction::right;
+        } else {
+            desiredTankDir = Direction::left;
+        }
+    } else if (dx <= -abs(dy)) {
+        desiredTurretDir = Direction::up;
+        if (dy >= 0) {
+            desiredTankDir = Direction::right;
+        } else {
+            desiredTankDir = Direction::left;
+        }
+    } else if (dy >= abs(dx)) {
+        desiredTurretDir = Direction::right;
+        if (dx >= 0) {
+            desiredTankDir = Direction::down;
+        } else {
+            desiredTankDir = Direction::up;
+        }
+    } else if (dy <= -abs(dx)) {
+        desiredTurretDir = Direction::left;
+        if (dx >= 0) {
+            desiredTankDir = Direction::down;
+        } else {
+            desiredTankDir = Direction::up;
+        }
+    }
+
+    auto tankRot = getRotationTo(myPos.dir, desiredTankDir);
+    auto turretRot = getRotationTo(myTurretDir, desiredTurretDir);
+
+    if (tankRot == RotationDirection::none && turretRot == RotationDirection::none) {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+
+        if (gen() % 4 != 0) {
+            auto nxtPos = afterMove(myPos, MoveDirection::forward);
+            if (isValid(nxtPos.pos, dim) && !isWall[nxtPos.pos.x][nxtPos.pos.y]) {
+                return Move{MoveDirection::forward};
+            }
+            return BeDrunkInsideZone(gameState);
+        }
+
+        auto nxtPos = afterMove(myPos, MoveDirection::backward);
+        switch (gen() % 3) {
+            case 0:
+                if (isValid(nxtPos.pos, dim) && !isWall[nxtPos.pos.x][nxtPos.pos.y]) {
+                    return Move{MoveDirection::backward};
+                }
+                return BeDrunkInsideZone(gameState);
+            case 1:
+                return Wait{};
+            case 2:
+                return BeDrunkInsideZone(gameState);
+        }
+    }
+
+    return Rotate{tankRot, turretRot};
 }
 
 bool Bot::willBeHitByBullet(const GameState& gameState, const OrientedPosition& pos) const {

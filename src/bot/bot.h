@@ -57,6 +57,8 @@ class Bot {
         bool useDoubleBulletIfPossible = true
     );
 
+    std::optional<ResponseVariant> rotateToEnemy(const GameState& gameState);
+
     void onFirstNextMove(const GameState& gameState);
     void initIsWall(const std::vector<std::vector<Tile>>& tiles);
     void initZoneName(const std::vector<std::vector<Tile>>& tiles);
@@ -73,6 +75,7 @@ class Bot {
 
     struct BfsResult {
         MoveOrRotation move;
+        OrientedPosition finalPos;
         int eta;
     };
 
@@ -113,6 +116,14 @@ class Bot {
                     continue;
                 }
 
+                if (knowledgeMap.containsMine(nextPos.pos)) {
+                    continue;
+                }
+
+                if (knowledgeMap.isOnBulletTraj(x, y)) {
+                    continue;
+                }
+
                 if (visited[x][y][dir]) {
                     continue;
                 }
@@ -136,7 +147,7 @@ class Bot {
         }
 
         lastMove = reversed(lastMove);
-        return BfsResult{lastMove, eta};
+        return BfsResult{lastMove, finish, eta};
     }
 
     template<class F>
