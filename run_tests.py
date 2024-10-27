@@ -204,21 +204,34 @@ def main():
     used_ports = set()
     base_port = find_available_port(5000, used_ports)
 
-    # Use ThreadPoolExecutor to run servers and clients concurrently
-    with ThreadPoolExecutor(max_workers=args.n * (num_bots + 1)) as executor:
-        for i in range(args.n):
-            port = find_available_port(base_port, used_ports)
-            executor.submit(run_server, i, port, num_bots, args, experiment_dir)
-            time.sleep(1)
-            # Run bots for the server based on the number provided
-            for bot_id, bot_name in enumerate(args.bots, start=1):
-                executor.submit(
-                    run_bot, i, bot_name, bot_id, port, args.host, experiment_dir
-                )
+    batch_spread = 25
+    with ThreadPoolExecutor(max_workers=batch_spread * (num_bots + 1)) as executor:
+        for batch_start in range(0, args.n, batch_spread):
+            # Limit to batch_spread or remaining tests, whichever is smaller
+            current_batch_size = min(batch_spread, args.n - batch_start)
 
-    # Allow time for all experiments to finish
-    total_time = args.broadcast_interval * args.ticks / 1000 + 15
-    time.sleep(total_time)
+            for i in range(current_batch_size):
+                test_id = batch_start + i
+                port = find_available_port(base_port, used_ports)
+                executor.submit(
+                    run_server, test_id, port, num_bots, args, experiment_dir
+                )
+                time.sleep(1)
+
+                for bot_id, bot_name in enumerate(args.bots, start=1):
+                    executor.submit(
+                        run_bot,
+                        test_id,
+                        bot_name,
+                        bot_id,
+                        port,
+                        args.host,
+                        experiment_dir,
+                    )
+
+            total_time = args.broadcast_interval * args.ticks / 1000 + 5
+            print(f"[INFO] Waiting for {total_time} seconds before the next batch...")
+            time.sleep(total_time)
 
     # Summarize results after all experiments are done
     summarize_results(experiment_dir, args.n, len(args.bots))
