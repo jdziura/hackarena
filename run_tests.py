@@ -202,7 +202,7 @@ def main():
     os.makedirs(experiment_dir)
 
     used_ports = set()
-    base_port = 5000
+    base_port = find_available_port(5000, used_ports)
 
     # Use ThreadPoolExecutor to run servers and clients concurrently
     with ThreadPoolExecutor(max_workers=args.n * (num_bots + 1)) as executor:
