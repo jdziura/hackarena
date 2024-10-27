@@ -185,13 +185,6 @@ ResponseVariant Bot::NextMove(const GameState& gameState) {
     if (response.has_value()) 
         return response.value();
 
-    response = dropMineIfPossible(gameState);
-    if (response.has_value()) 
-        return response.value();
-
-    response = useRadarIfPossible(gameState);
-    if (response.has_value()) 
-        return response.value();
 
     // TODO: jakieś gówno XD niech będzie na razie ale potem można wyjebać
     if (lastPos == myPos && gen() % 4 == 0) {
@@ -211,6 +204,18 @@ ResponseVariant Bot::NextMove(const GameState& gameState) {
         if (response.has_value())
             return response.value();
     }
+
+    response = dropMineIfReasonable(gameState);
+    if (response.has_value()) 
+        return response.value();
+
+    response = useRadarIfPossible(gameState);
+    if (response.has_value()) 
+        return response.value();
+
+    response = goForItem(gameState);
+    if (response.has_value()) 
+        return response.value();
 
     auto isZone = [&](const OrientedPosition& oPos, int timer) {
         return zoneName[oPos.pos.x][oPos.pos.y] != '?';
@@ -392,11 +397,53 @@ std::optional<ResponseVariant> Bot::dropMineIfPossible(const GameState& gameStat
     return AbilityUse{AbilityType::dropMine};
 }
 
+std::optional<ResponseVariant> Bot::dropMineIfReasonable(const GameState& gameState) {
+    if (heldItem == SecondaryItemType::Mine && (isBetweenWalls(myPos.pos, isWall, dim) || zoneName[myPos.pos.x][myPos.pos.y] != '?')) {
+        return AbilityUse{AbilityType::dropMine};
+    }
+
+    return std::nullopt;
+}
+
 std::optional<ResponseVariant> Bot::useRadarIfPossible(const GameState& gameState) {
     if (heldItem == SecondaryItemType::Radar) {
         return AbilityUse{AbilityType::useRadar};
     }
 
+    return std::nullopt;
+}
+
+std::optional<ResponseVariant> Bot::goForItem(const GameState& gameState) {
+    if (knowWhereIs(Item{}, gameState) && heldItem == SecondaryItemType::unknown) {
+        auto isItem = [&](const OrientedPosition& oPos, int timer) {
+            int DOUBLE_BULLET_RANGE = 4;
+            int OTHER_ITEM_RANGE = 10;
+            for (const TileVariant& object : gameState.map.tiles[oPos.pos.x][oPos.pos.y].objects) {
+                if (std::holds_alternative<Item>(object) && std::get<Item>(object).type == ItemType::mine) {
+                    if (timer < OTHER_ITEM_RANGE) return true;
+                } else if (std::holds_alternative<Item>(object) && std::get<Item>(object).type == ItemType::radar) {
+                    if (timer < OTHER_ITEM_RANGE) return true;
+                } else if (std::holds_alternative<Item>(object) && std::get<Item>(object).type == ItemType::doubleBullet) {
+                    if (timer < DOUBLE_BULLET_RANGE) return true;
+                } else if (std::holds_alternative<Item>(object) && std::get<Item>(object).type == ItemType::laser) {
+                    if (timer < OTHER_ITEM_RANGE) return true;
+                }
+            }
+            for (auto object: knowledgeMap.tiles[oPos.pos.x][oPos.pos.y].objects) {
+                if (std::holds_alternative<Item>(object.object) && std::get<Item>(object.object).type == ItemType::mine) {
+                    if (timer < OTHER_ITEM_RANGE) return true;
+                } else if (std::holds_alternative<Item>(object.object) && std::get<Item>(object.object).type == ItemType::radar) {
+                    if (timer < OTHER_ITEM_RANGE) return true;
+                } else if (std::holds_alternative<Item>(object.object) && std::get<Item>(object.object).type == ItemType::doubleBullet) {
+                    if (timer < DOUBLE_BULLET_RANGE) return true;
+                } else if (std::holds_alternative<Item>(object.object) && std::get<Item>(object.object).type == ItemType::laser) {
+                    if (timer < OTHER_ITEM_RANGE) return true;
+                }
+            }
+            return false;
+        };
+        return bfsStrategy(gameState, isItem);
+    }
     return std::nullopt;
 }
 
@@ -535,4 +582,38 @@ bool Bot::willBeHitByBullet(const GameState& gameState, const OrientedPosition& 
     int x = pos.pos.x;
     int y = pos.pos.y;
     return knowledgeMap.willBeHitByBulletInNextMove(x, y);
+}
+
+bool Bot::knowWhereIs(const TileVariant& object, const GameState& gamestate) const {
+    for (auto row: gamestate.map.tiles) {
+        for (auto tile: row) {
+            for (auto obj: tile.objects) {
+                if (obj.index() == object.index()) {
+                    if (std::holds_alternative<Tank>(obj)) {
+                        if (std::get<Tank>(obj).ownerId != myId) {
+                            return true;
+                        }
+                    } else {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    for (auto row: knowledgeMap.tiles) {
+        for (auto tile: row) {
+            for (auto obj: tile.objects) {
+                if (obj.object.index() == object.index()) {
+                    if (std::holds_alternative<Tank>(obj.object)) {
+                        if (std::get<Tank>(obj.object).ownerId != myId) {
+                            return true;
+                        }
+                    } else {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    return false;
 }

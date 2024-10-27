@@ -40,7 +40,10 @@ class Bot {
 
     // strategies
     std::optional<ResponseVariant> dropMineIfPossible(const GameState& gameState);
+    std::optional<ResponseVariant> dropMineIfReasonable(const GameState& gameState);
     std::optional<ResponseVariant> useRadarIfPossible(const GameState& gameState);
+
+    std::optional<ResponseVariant> goForItem(const GameState& gameState);
 
     std::optional<ResponseVariant> shootIfSeeingEnemy(
         const GameState& gameState, 
@@ -68,6 +71,7 @@ class Bot {
 
     bool canMoveForwardInsideZone(const OrientedPosition& pos) const;
     bool canMoveBackwardInsideZone(const OrientedPosition& pos) const;
+    bool knowWhereIs(const TileVariant& object, const GameState& gamestate) const;
 
     struct BfsResult {
         MoveOrRotation move;
